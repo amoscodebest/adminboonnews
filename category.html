@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER-CMS // Responsive Taxonomy Manager</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #f0f4f8;
+            --bg-panel: #ffffff;
+            --bg-card: #ffffff;
+            --neon-cyan: #007bb5;
+            --neon-pink: #d9004c;
+            --neon-yellow: #a68a00;
+            --neon-green: #008a3b;
+            --text-main: #1a233a;
+            --text-dim: #64748b;
+            --border-glow: rgba(0, 123, 181, 0.25);
+            --panel-border: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Share Tech Mono', monospace;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden !important;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Ambient Light Grid Overlay */
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(0, 123, 181, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 123, 181, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--panel-border);
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .menu-toggle-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 8px 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* Navigation Drawer Overlay */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.active { display: block; opacity: 1; }
+
+        /* App Container Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--panel-border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1002;
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .brand-box { margin-bottom: 30px; padding-left: 10px; }
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+        }
+        .brand-subtitle { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            border-radius: 0 4px 4px 0;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item a:hover, .nav-item.active a {
+            background: #e0f2fe;
+            color: var(--neon-cyan);
+            border-left-color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        /* Main Viewport Container */
+        main {
+            padding: 24px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-width: 0;
+        }
+
+        /* Viewport Header */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 16px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .view-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .view-title p { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
+
+        /* Workspace Grid Layout */
+        .taxonomy-workspace-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            align-items: start;
+            width: 100%;
+            min-width: 0;
+        }
+
+        /* Cyber Panel Styling */
+        .cyber-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+            min-width: 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .panel-title span { color: var(--neon-cyan); font-size: 0.7rem; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 14px; min-width: 0; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .cyber-input, .cyber-select, .cyber-textarea {
+            background: #f8fafc;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+
+        .cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus {
+            border-color: var(--neon-cyan);
+            background: #ffffff;
+        }
+
+        .slug-container {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .slug-prefix {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            padding-left: 10px;
+            white-space: nowrap;
+        }
+
+        .slug-container .cyber-input { border: none; padding-left: 4px; background: transparent; }
+
+        .cyber-btn {
+            background: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan);
+            color: #ffffff;
+            padding: 10px 16px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .cyber-btn:hover { background: #00608e; border-color: #00608e; }
+        .cyber-btn.pink { background: var(--neon-pink); border-color: var(--neon-pink); }
+        .cyber-btn.pink:hover { background: #a8003b; border-color: #a8003b; }
+
+        /* Desktop Table View */
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+        }
+
+        .cyber-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .cyber-table th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 12px;
+            border-bottom: 2px solid var(--panel-border);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .cyber-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--panel-border);
+            background: #ffffff;
+        }
+
+        /* Mobile Responsive Card Container (Hidden on Desktop) */
+        .mobile-cards-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .category-card {
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .card-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            border-top: 1px dashed var(--panel-border);
+            padding-top: 8px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Badges & Counters */
+        .counter-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .counter-badge.active {
+            background: #e6f4ea;
+            color: var(--neon-green);
+            border: 1px solid #b7e1cd;
+        }
+
+        .counter-badge.empty {
+            background: #f1f5f9;
+            color: var(--text-dim);
+            border: 1px solid var(--panel-border);
+        }
+
+        .parent-tag {
+            font-size: 0.7rem;
+            color: var(--neon-yellow);
+            background: #fef9c3;
+            padding: 2px 6px;
+            border: 1px solid #fef08a;
+            border-radius: 3px;
+            margin-right: 4px;
+            font-weight: bold;
+        }
+
+        .action-icon-btn {
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .action-icon-btn:hover { color: var(--neon-cyan); border-color: var(--neon-cyan); background: #e0f2fe; }
+        .action-icon-btn.delete-btn:hover { color: var(--neon-pink); border-color: var(--neon-pink); background: #ffe4e6; }
+        .action-icon-btn.disabled { color: var(--text-dim); cursor: not-allowed; opacity: 0.4; border-color: var(--panel-border); background: #f8fafc; }
+
+        /* Tag Cloud Management Grid */
+        .tag-cloud-editor {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            min-height: 80px;
+            width: 100%;
+        }
+
+        .tag-manage-chip {
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 100%;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .tag-manage-chip span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tag-count-sub {
+            font-size: 0.7rem;
+            color: var(--neon-cyan);
+            background: #e0f2fe;
+            padding: 1px 5px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        .tag-del-btn {
+            cursor: pointer;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .tag-del-btn:hover { color: var(--neon-pink); }
+        .tag-del-btn.blocked { cursor: not-allowed; opacity: 0.3; }
+
+        /* Quick Search Bar */
+        .filter-search-box { margin-bottom: 14px; }
+
+        /* MOBILE OVERFLOW ELIMINATION CONTROLS */
+        @media (max-width: 1024px) {
+            .taxonomy-workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-header { display: flex; }
+            .app-container { grid-template-columns: 1fr; }
+
+            aside {
+                position: fixed;
+                top: 0; left: 0;
+                height: 100vh;
+                width: 260px;
+                transform: translateX(-100%);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            }
+
+            aside.open { transform: translateX(0); }
+            main { padding: 14px; }
+
+            .top-bar { flex-direction: column; align-items: stretch; }
+            .form-row { grid-template-columns: 1fr; }
+
+            /* Switch Table to Cards for Mobile */
+            .table-responsive-wrapper { display: none; }
+            .mobile-cards-container { display: flex; }
+
+            .slug-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .slug-prefix {
+                padding: 6px 10px 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div class="brand-title">CYBER_CMS</div>
+        <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Toggle Drawer Menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation Drawer -->
+        <aside id="sideNav">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-title">CYBER_CMS</div>
+                    <div class="brand-subtitle">TAXONOMY ENGINE</div>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="#"><i class="fa-solid fa-terminal"></i> Dashboard</a></li>
+                    <li class="nav-item"><a href="#"><i class="fa-solid fa-newspaper"></i> Articles</a></li>
+                    <li class="nav-item active"><a href="#"><i class="fa-solid fa-folder-tree"></i> Categories & Tags</a></li>
+                    <li class="nav-item"><a href="#"><i class="fa-solid fa-database"></i> Media Bank</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main>
+            <!-- Top Bar Header -->
+            <div class="top-bar">
+                <div class="view-title">
+                    <h1>Taxonomy Manager</h1>
+                    <p>Organize news desks, hierarchy, and indexed post tags.</p>
+                </div>
+            </div>
+
+            <!-- Responsive Layout Grid -->
+            <div class="taxonomy-workspace-grid">
+
+                <!-- Left Column: Category Creation & Quick Tag Forms -->
+                <div class="forms-column">
+                    
+                    <!-- Category Form Panel -->
+                    <div class="cyber-panel">
+                        <div class="panel-title">Add / Edit Desk <span id="formModeText">CREATE NEW</span></div>
+                        <form id="categoryForm" onsubmit="handleCategorySubmit(event)">
+                            <input type="hidden" id="editCategoryId" value="">
+
+                            <div class="form-group">
+                                <label class="form-label">Category Name</label>
+                                <input type="text" id="catName" class="cyber-input" placeholder="e.g. World Politics" required oninput="generateCatSlug()">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">URL Slug</label>
+                                <div class="slug-container">
+                                    <span class="slug-prefix">/category/</span>
+                                    <input type="text" id="catSlug" class="cyber-input" placeholder="world-politics" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Parent Desk</label>
+                                    <select id="catParent" class="cyber-select">
+                                        <option value="">None (Top Level)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Display Order</label>
+                                    <input type="number" id="catOrder" class="cyber-input" value="0" min="0">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea id="catDesc" class="cyber-textarea" style="min-height: 60px;" placeholder="Brief summary of desk coverage..."></textarea>
+                            </div>
+
+                            <button type="submit" class="cyber-btn" id="catSubmitBtn">
+                                <i class="fa-solid fa-plus"></i> Save Category
+                            </button>
+                            <button type="button" class="cyber-btn pink" id="cancelEditBtn" style="display:none; margin-top:8px;" onclick="resetCatForm()">
+                                <i class="fa-solid fa-xmark"></i> Cancel Edit
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Quick Tag Creator -->
+                    <div class="cyber-panel">
+                        <div class="panel-title">Quick Register Tag <span>INDEXING</span></div>
+                        <form onsubmit="handleTagQuickAdd(event)">
+                            <div class="form-group">
+                                <label class="form-label">Tag Name</label>
+                                <input type="text" id="quickTagInput" class="cyber-input" placeholder="e.g. Osun Election 2026" required>
+                            </div>
+                            <button type="submit" class="cyber-btn">
+                                <i class="fa-solid fa-tag"></i> Register Tag
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Data & Tags Registry -->
+                <div class="data-column">
+                    
+                    <!-- Categories Desk Hierarchy Panel -->
+                    <div class="cyber-panel">
+                        <div class="panel-title">Category Desks <span>STRUCTURAL DESKS</span></div>
+                        
+                        <div class="filter-search-box">
+                            <input type="text" id="catSearch" class="cyber-input" placeholder="Filter categories..." oninput="renderCategories()">
+                        </div>
+
+                        <!-- Desktop Table View -->
+                        <div class="table-responsive-wrapper">
+                            <table class="cyber-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Category</th>
+                                        <th>Slug</th>
+                                        <th>Articles</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoryTableBody">
+                                    <!-- Dynamic Desktop Insertion -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile Card View (Zero Horizontal Overflow) -->
+                        <div class="mobile-cards-container" id="categoryCardsBody">
+                            <!-- Dynamic Mobile Cards Insertion -->
+                        </div>
+                    </div>
+
+                    <!-- Topical Tag Registry Panel -->
+                    <div class="cyber-panel">
+                        <div class="panel-title">Tag Registry & Cleanup <span>TAG REGISTRY</span></div>
+                        
+                        <div class="filter-search-box">
+                            <input type="text" id="tagSearch" class="cyber-input" placeholder="Search registered tags..." oninput="renderTags()">
+                        </div>
+
+                        <div class="tag-cloud-editor" id="tagCloudContainer">
+                            <!-- Dynamic Tag Chips Insertion -->
+                        </div>
+                        <p style="font-size:0.7rem; color: var(--text-dim); margin-top: 8px;">
+                            <i class="fa-solid fa-shield-halved" style="color:var(--neon-green)"></i> Tags with active articles (&gt;0) are protected from deletion.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        let categories = [
+            { id: "cat_1", name: "Politics", slug: "politics", parentId: "", order: 1, count: 14, desc: "National and local government news." },
+            { id: "cat_2", name: "Elections", slug: "elections", parentId: "cat_1", order: 2, count: 8, desc: "Polling, vote counts, and election analysis." },
+            { id: "cat_3", name: "Technology", slug: "technology", parentId: "", order: 3, count: 22, desc: "Software engineering and digital updates." },
+            { id: "cat_4", name: "Cybersecurity", slug: "cybersecurity", parentId: "cat_3", order: 4, count: 0, desc: "InfoSec and system vulnerabilities." },
+            { id: "cat_5", name: "Sports", slug: "sports", parentId: "", order: 5, count: 0, desc: "Local and international sports coverage." }
+        ];
+
+        let tags = [
+            { id: "tag_1", name: "elections", count: 8 },
+            { id: "tag_2", name: "osun-state", count: 5 },
+            { id: "tag_3", name: "javascript", count: 12 },
+            { id: "tag_4", name: "firebase", count: 6 },
+            { id: "tag_5", name: "draft-notes", count: 0 },
+            { id: "tag_6", name: "deprecated-topic", count: 0 }
+        ];
+
+        // Drawer Controls
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sideNav = document.getElementById('sideNav');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        function toggleDrawer() {
+            sideNav.classList.toggle('open');
+            drawerOverlay.classList.toggle('active');
+        }
+
+        menuToggleBtn.addEventListener('click', toggleDrawer);
+        drawerOverlay.addEventListener('click', toggleDrawer);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCategories();
+            renderTags();
+        });
+
+        function generateCatSlug() {
+            const name = document.getElementById('catName').value;
+            document.getElementById('catSlug').value = name
+                .toLowerCase().trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        function populateParentDropdown(excludeId = null) {
+            const select = document.getElementById('catParent');
+            select.innerHTML = '<option value="">None (Top Level)</option>';
+            categories.forEach(cat => {
+                if (cat.id !== excludeId) {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = cat.name;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        function renderCategories() {
+            populateParentDropdown(document.getElementById('editCategoryId').value);
+            const tbody = document.getElementById('categoryTableBody');
+            const mobileCardsContainer = document.getElementById('categoryCardsBody');
+            const query = document.getElementById('catSearch').value.toLowerCase();
+            
+            tbody.innerHTML = '';
+            mobileCardsContainer.innerHTML = '';
+
+            const filtered = categories.filter(c => 
+                c.name.toLowerCase().includes(query) || c.slug.toLowerCase().includes(query)
+            );
+
+            filtered.sort((a, b) => a.order - b.order);
+
+            filtered.forEach(cat => {
+                const parentCat = categories.find(p => p.id === cat.parentId);
+                const countBadgeClass = cat.count > 0 ? 'active' : 'empty';
+                const canDelete = cat.count === 0;
+
+                // Render Desktop Table Row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${cat.order}</td>
+                    <td>
+                        ${parentCat ? `<span class="parent-tag">${parentCat.name}</span>` : ''}
+                        <strong>${cat.name}</strong>
+                    </td>
+                    <td style="color:var(--text-dim)">/${cat.slug}</td>
+                    <td>
+                        <span class="counter-badge ${countBadgeClass}">${cat.count} Posts</span>
+                    </td>
+                    <td>
+                        <button class="action-icon-btn" onclick="editCategory('${cat.id}')" title="Edit">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="action-icon-btn delete-btn ${!canDelete ? 'disabled' : ''}" 
+                                onclick="deleteCategory('${cat.id}', ${canDelete})" 
+                                title="${canDelete ? 'Delete' : 'Cannot delete category with active posts'}">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Render Mobile Card View
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="card-header-row">
+                        <div class="card-title">
+                            ${parentCat ? `<span class="parent-tag">${parentCat.name}</span>` : ''}
+                            ${cat.name}
+                        </div>
+                        <span class="counter-badge ${countBadgeClass}">${cat.count} Posts</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-dim)">Slug: /${cat.slug}</div>
+                    <div class="card-meta-row">
+                        <span>Display Order: #${cat.order}</span>
+                        <div class="card-actions">
+                            <button class="action-icon-btn" onclick="editCategory('${cat.id}')">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+                            <button class="action-icon-btn delete-btn ${!canDelete ? 'disabled' : ''}" 
+                                    onclick="deleteCategory('${cat.id}', ${canDelete})">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                mobileCardsContainer.appendChild(card);
+            });
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tagCloudContainer');
+            const query = document.getElementById('tagSearch').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = tags.filter(t => t.name.toLowerCase().includes(query));
+
+            filtered.forEach(tag => {
+                const chip = document.createElement('div');
+                chip.className = 'tag-manage-chip';
+                const canDelete = tag.count === 0;
+
+                chip.innerHTML = `
+                    <span>#${tag.name}</span>
+                    <span class="tag-count-sub">${tag.count}</span>
+                    <i class="fa-solid fa-xmark tag-del-btn ${!canDelete ? 'blocked' : ''}" 
+                       onclick="deleteTag('${tag.id}', ${canDelete})" 
+                       title="${canDelete ? 'Delete Tag' : 'Protected: active posts count > 0'}"></i>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        function handleCategorySubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editCategoryId').value;
+            const name = document.getElementById('catName').value.trim();
+            const slug = document.getElementById('catSlug').value.trim();
+            const parentId = document.getElementById('catParent').value;
+            const order = parseInt(document.getElementById('catOrder').value, 10) || 0;
+            const desc = document.getElementById('catDesc').value.trim();
+
+            if (editId) {
+                const index = categories.findIndex(c => c.id === editId);
+                if (index !== -1) {
+                    categories[index] = { ...categories[index], name, slug, parentId, order, desc };
+                }
+            } else {
+                const newCat = {
+                    id: 'cat_' + Date.now(),
+                    name, slug, parentId, order, desc, count: 0
+                };
+                categories.push(newCat);
+            }
+
+            resetCatForm();
+            renderCategories();
+        }
+
+        function editCategory(id) {
+            const cat = categories.find(c => c.id === id);
+            if (!cat) return;
+
+            document.getElementById('editCategoryId').value = cat.id;
+            document.getElementById('catName').value = cat.name;
+            document.getElementById('catSlug').value = cat.slug;
+            document.getElementById('catOrder').value = cat.order;
+            document.getElementById('catDesc').value = cat.desc;
+            
+            populateParentDropdown(cat.id);
+            document.getElementById('catParent').value = cat.parentId;
+
+            document.getElementById('formModeText').textContent = "EDITING [" + cat.name + "]";
+            document.getElementById('catSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Update Desk';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetCatForm() {
+            document.getElementById('editCategoryId').value = '';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('formModeText').textContent = "CREATE NEW";
+            document.getElementById('catSubmitBtn').innerHTML = '<i class="fa-solid fa-plus"></i> Save Category';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            populateParentDropdown();
+        }
+
+        function deleteCategory(id, canDelete) {
+            if (!canDelete) {
+                alert("DELETION BLOCKED: This category contains active articles. Reassign or remove the articles first.");
+                return;
+            }
+            if (confirm("Are you sure you want to delete this category?")) {
+                categories = categories.filter(c => c.id !== id);
+                renderCategories();
+            }
+        }
+
+        function handleTagQuickAdd(e) {
+            e.preventDefault();
+            const input = document.getElementById('quickTagInput');
+            const tagName = input.value.toLowerCase().trim().replace(/[^\w-]/g, '');
+
+            if (tagName) {
+                const exists = tags.some(t => t.name === tagName);
+                if (!exists) {
+                    tags.push({ id: 'tag_' + Date.now(), name: tagName, count: 0 });
+                    renderTags();
+                    input.value = '';
+                } else {
+                    alert("Tag already exists.");
+                }
+            }
+        }
+
+        function deleteTag(id, canDelete) {
+            if (!canDelete) {
+                alert("DELETION BLOCKED: This tag is linked to active articles. Remove it from articles before deleting.");
+                return;
+            }
+            tags = tags.filter(t => t.id !== id);
+            renderTags();
+        }
+    </script>
+</body>
+</html>

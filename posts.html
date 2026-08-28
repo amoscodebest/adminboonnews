@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-CMS // Article Manager Matrix (Light Mode)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #f4f6fb;
+            --bg-panel: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --neon-cyan: #0077cc;
+            --neon-pink: #d9004c;
+            --neon-yellow: #b58900;
+            --neon-green: #008a3c;
+            --neon-blue: #0055ff;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --border-glow: rgba(0, 119, 204, 0.35);
+            --panel-border: #cbd5e1;
+            --input-bg: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* CRT Scanline & Grid Overlay (Light Mode Tuning) */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.03) 50%), linear-gradient(90deg, rgba(0, 100, 255, 0.01), rgba(0, 0, 0, 0.01), rgba(255, 0, 100, 0.01));
+            z-index: 9999;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(0, 119, 204, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 119, 204, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        /* Mobile Header Bar */
+        .mobile-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--panel-border);
+            padding: 14px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .menu-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 8px 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 119, 204, 0.15);
+        }
+
+        /* Backdrop Overlay for Mobile Drawer */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Layout Architecture */
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--panel-border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1002;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.02);
+        }
+
+        .brand-box {
+            margin-bottom: 30px;
+            padding-left: 10px;
+        }
+
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(0, 119, 204, 0.2);
+        }
+
+        .brand-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        .nav-item a:hover, .nav-item.active a {
+            background: rgba(0, 119, 204, 0.08);
+            color: var(--neon-cyan);
+            border-left-color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .system-status-widget {
+            background: #f1f5f9;
+            border: 1px dashed var(--panel-border);
+            padding: 12px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 20px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--neon-green);
+            margin-right: 6px;
+        }
+
+        /* Main Workspace Container */
+        main {
+            padding: 30px;
+            overflow-y: auto;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Top Bar & Title */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--panel-border);
+            padding-bottom: 20px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .view-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .view-title p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Cyberpunk Buttons */
+        .cyber-btn {
+            background: #ffffff;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 10px 18px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+            text-decoration: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+
+        .cyber-btn:hover {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 119, 204, 0.3);
+            color: #ffffff;
+        }
+
+        .cyber-btn.pink { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .cyber-btn.pink:hover { background: var(--neon-pink); box-shadow: 0 0 12px rgba(217, 0, 76, 0.3); color: #ffffff; }
+
+        .cyber-btn.sm {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+        }
+
+        .cyber-btn.icon-only {
+            padding: 6px 9px;
+        }
+
+        .cyber-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: var(--text-dim);
+            color: var(--text-dim);
+            box-shadow: none;
+            background: #f1f5f9;
+        }
+
+        /* Filter & Search Toolbar Panel */
+        .toolbar-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--panel-border);
+            padding: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            min-width: 240px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-cyan);
+            font-size: 0.85rem;
+        }
+
+        .cyber-input, .cyber-select, .cyber-textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-box .cyber-input {
+            padding-left: 36px;
+            width: 100%;
+        }
+
+        .cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 8px rgba(0, 119, 204, 0.25);
+            background: #ffffff;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .cyber-select {
+            cursor: pointer;
+            background-image: linear-gradient(45deg, transparent 50%, var(--neon-cyan) 50%), linear-gradient(135deg, var(--neon-cyan) 50%, transparent 50%);
+            background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            padding-right: 30px;
+        }
+
+        .cyber-select option {
+            background: #ffffff;
+            color: var(--text-main);
+        }
+
+        /* Checkbox Component */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            user-select: none;
+            background: var(--input-bg);
+            padding: 10px 12px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--neon-cyan);
+            background: #ffffff;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+        }
+
+        .checkbox-container input[type="checkbox"]:checked {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px rgba(0, 119, 204, 0.3);
+        }
+
+        .checkbox-container input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 12px;
+            top: -1px;
+            left: 3px;
+        }
+
+        /* Data Table Container */
+        .table-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--panel-border);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .cyber-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .cyber-table th {
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 14px 16px;
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--panel-border);
+            white-space: nowrap;
+        }
+
+        .cyber-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .cyber-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .cyber-table tbody tr:hover {
+            background: rgba(0, 119, 204, 0.04);
+        }
+
+        /* Post Thumbnail Preview */
+        .post-cell {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 260px;
+        }
+
+        .thumb-box {
+            width: 50px;
+            height: 40px;
+            background: #e2e8f0;
+            border: 1px solid var(--panel-border);
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .thumb-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-title-text {
+            color: #0f172a;
+            font-weight: 700;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-slug {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* Feature Badge */
+        .featured-tag {
+            color: var(--neon-yellow);
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .status-badge.published {
+            background: rgba(0, 138, 60, 0.1);
+            color: var(--neon-green);
+            border-color: var(--neon-green);
+        }
+
+        .status-badge.draft {
+            background: rgba(181, 137, 0, 0.1);
+            color: var(--neon-yellow);
+            border-color: var(--neon-yellow);
+        }
+
+        .status-badge.scheduled {
+            background: rgba(0, 85, 255, 0.1);
+            color: var(--neon-blue);
+            border-color: var(--neon-blue);
+        }
+
+        .status-badge.pending {
+            background: rgba(217, 0, 76, 0.1);
+            color: var(--neon-pink);
+            border-color: var(--neon-pink);
+        }
+
+        /* Category & Tag Pills */
+        .cat-pill {
+            background: rgba(0, 119, 204, 0.08);
+            color: var(--neon-cyan);
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(0, 119, 204, 0.25);
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .type-pill {
+            background: rgba(217, 0, 76, 0.08);
+            color: var(--neon-pink);
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(217, 0, 76, 0.25);
+            display: inline-block;
+            margin-top: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .author-tag {
+            font-size: 0.8rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .metrics-cell {
+            white-space: nowrap;
+            font-size: 0.8rem;
+        }
+
+        .metrics-cell i {
+            color: var(--text-dim);
+            margin-right: 4px;
+        }
+
+        /* Table Action Buttons Container */
+        .actions-cell {
+            white-space: nowrap;
+        }
+
+        .actions-flex {
+            display: flex;
+            gap: 6px;
+        }
+
+        /* Cursor Pagination Footer */
+        .pagination-bar {
+            background: #ffffff;
+            border-top: 1px solid var(--panel-border);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.8rem;
+        }
+
+        .pagination-info span {
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* System Telemetry Ticker */
+        .sys-ticker {
+            margin-top: 25px;
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            padding: 10px 14px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .sys-ticker span { color: var(--neon-cyan); font-weight: bold; }
+
+        /* Modal Layout */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 10px 30px rgba(0, 119, 204, 0.2);
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .modal-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-row.three-col {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f8fafc;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .mobile-header { display: flex; }
+            .app-container { grid-template-columns: 1fr; }
+            aside {
+                position: fixed; top: 0; left: 0; height: 100vh; width: 280px;
+                transform: translateX(-100%);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            }
+            aside.open { transform: translateX(0); }
+            main { padding: 16px; }
+            .toolbar-panel { flex-direction: column; align-items: stretch; }
+            .filter-group { width: 100%; }
+            .cyber-select { flex-grow: 1; }
+            .form-row, .form-row.three-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <header class="mobile-header">
+        <div class="brand-title">BoonNews_CMS</div>
+        <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Toggle Navigation">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <div class="app-container">
+        <aside id="sideNav">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-title">BoonNews_CMS L</div>
+                    <div class="brand-subtitle">ADMIN EDITOR</div>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="index.html"><i class="fa-solid fa-terminal"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="posts.html"><i class="fa-solid fa-newspaper"></i> Articles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="editor.html"><i class="fa-solid fa-plus"></i> Add Post</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="category.html"><i class="fa-solid fa-folder-tree"></i> Categories</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="posts.html"><i class="fa-solid fa-file"></i> Editor</a>
+                    </li>
+                    
+                </ul>
+            </div>
+            
+            <div class="system-status-widget">
+                <div><span class="status-dot"></span> FIRESTORE: CONNECTED</div>
+                <div style="margin-top: 4px;">LIMIT: <span id="limitDisplay">4</span> POSTS / PAGE</div>
+            </div>
+        </aside>
+
+        <main>
+            <div class="top-bar">
+                <div class="view-title">
+                    <h1>Article Post Manager</h1>
+                    <p>Filter, edit, manage, and control news publishing articles.</p>
+                </div>
+                <div>
+                    <button class="cyber-btn" onclick="window.openArticleModal()">
+                        <i class="fa-solid fa-plus"></i> Write New Article
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-panel">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" class="cyber-input" placeholder="Search headline keywords or slugs..." oninput="window.handleFilterChange()">
+                </div>
+
+                <div class="filter-group">
+                    <select id="statusFilter" class="cyber-select" onchange="window.handleFilterChange()">
+                        <option value="all">ALL STATUSES</option>
+                        <option value="published">PUBLISHED</option>
+                        <option value="draft">DRAFT</option>
+                        <option value="scheduled">SCHEDULED</option>
+                        <option value="pending">PENDING REVIEW</option>
+                    </select>
+
+                    <select id="categoryFilter" class="cyber-select" onchange="window.handleFilterChange()">
+                        <option value="all">ALL CATEGORIES</option>
+                    </select>
+
+                    <select id="authorFilter" class="cyber-select" onchange="window.handleFilterChange()">
+                        <option value="all">ALL AUTHORS</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-panel">
+                <div class="table-responsive">
+                    <table class="cyber-table">
+                        <thead>
+                            <tr>
+                                <th>Article Headline</th>
+                                <th>Status</th>
+                                <th>Category / Type</th>
+                                <th>Author</th>
+                                <th>Publish Date</th>
+                                <th>Metrics</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding:30px; color:var(--text-dim);">
+                                    CONNECTING TO FIRESTORE DATABASE MATRIX...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-bar">
+                    <div class="pagination-info" id="paginationInfo">
+                        SHOWING <span>0 - 0</span> OF <span>0</span> POSTS | FIRESTORE REALTIME SYNC
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="cyber-btn sm" id="prevBtn" onclick="window.prevPage()"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                        <button class="cyber-btn sm" id="nextBtn" onclick="window.nextPage()">Next Batch <i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sys-ticker">
+                <div>SYS_TIME: <span id="clock">00:00:00 WAT</span></div>
+                <div>FIRESTORE QUERY COST: <span id="queryCost">0 READS / STREAM</span></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="articleModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">COMMAND // NEW ARTICLE</h3>
+                <button class="cyber-btn sm pink icon-only" onclick="window.closeArticleModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editArticleId">
+                
+                <div class="form-group">
+                    <label>Headline Title</label>
+                    <input type="text" id="formTitle" class="cyber-input" placeholder="Enter headline title..." oninput="window.autoGenerateSlug()">
+                </div>
+
+                <div class="form-group">
+                    <label>URL Slug</label>
+                    <input type="text" id="formSlug" class="cyber-input" placeholder="/news/article-url-slug">
+                </div>
+
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="formStatus" class="cyber-select">
+                            <option value="published">PUBLISHED</option>
+                            <option value="draft">DRAFT</option>
+                            <option value="scheduled">SCHEDULED</option>
+                            <option value="pending">PENDING REVIEW</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="formCategory" class="cyber-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Post Type (string)</label>
+                        <select id="formPostType" class="cyber-select">
+                            <option value="standard">standard</option>
+                            <option value="breaking">breaking</option>
+                            <option value="opinion">opinion</option>
+                            <option value="analysis">analysis</option>
+                            <option value="editorial">editorial</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label>Author</label>
+                        <select id="formAuthor" class="cyber-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Read Time (minutesRead - int64)</label>
+                        <input type="number" id="formMinutesRead" class="cyber-input" min="0" placeholder="5">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <label>Highlight Settings</label>
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="formIsFeatured">
+                            <span>isFeatured (boolean)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Cover Image / Media URL</label>
+                    <input type="text" id="formThumb" class="cyber-input" placeholder="https://dl.dropboxusercontent.com/...">
+                </div>
+
+                <div class="form-group">
+                    <label>Summary Excerpt</label>
+                    <textarea id="formSummary" class="cyber-textarea" rows="2" placeholder="Brief summary..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Document Content</label>
+                    <textarea id="formContent" class="cyber-textarea" rows="4" placeholder="Article body content..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cyber-btn sm pink" onclick="window.closeArticleModal()">Cancel</button>
+                <button class="cyber-btn sm" onclick="window.saveArticle()">Execute Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>MATRIX PREVIEW // LIVE VIEW</h3>
+                <button class="cyber-btn sm pink icon-only" onclick="window.closePreviewModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="previewBody">
+                </div>
+            <div class="modal-footer">
+                <button class="cyber-btn sm" onclick="window.closePreviewModal()">Close Preview</button>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+  import { 
+    getFirestore, 
+    collection, 
+    onSnapshot, 
+    doc, 
+    deleteDoc, 
+    getDocs,
+    getDoc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBfoxEnVep0wX5V_KVS-cd8o5sUMvrFY4c",
+    authDomain: "primeintelmedia-e2fe3.firebaseapp.com",
+    databaseURL: "https://primeintelmedia-e2fe3-default-rtdb.firebaseio.com",
+    projectId: "primeintelmedia-e2fe3",
+    storageBucket: "primeintelmedia-e2fe3.firebasestorage.app",
+    messagingSenderId: "228866357632",
+    appId: "1:228866357632:web:72dc9942f1cd41d857a965",
+    measurementId: "G-G0HRRV932S"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const newsPostsCol = collection(db, "newsPosts");
+
+  // State
+  let rawArticles = [];
+  let filteredArticles = [];
+  let currentPage = 1;
+  const itemsPerPage = 4;
+
+  // Drawer Controls
+  const menuToggleBtn = document.getElementById('menuToggleBtn');
+  const sideNav = document.getElementById('sideNav');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+
+  function toggleDrawer() {
+    sideNav.classList.toggle('open');
+    drawerOverlay.classList.toggle('active');
+  }
+
+  menuToggleBtn?.addEventListener('click', toggleDrawer);
+  drawerOverlay?.addEventListener('click', toggleDrawer);
+
+  // System Clock
+  function updateClock() {
+    const now = new Date();
+    const timeString = now.toTimeString().split(' ')[0] + ' WAT';
+    const clockEl = document.getElementById('clock');
+    if (clockEl) clockEl.textContent = timeString;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Helper Utilities
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function formatDropboxUrl(url) {
+    if (!url) return "";
+    let cleanUrl = url.trim();
+    if (cleanUrl.includes("dropbox.com")) {
+      return cleanUrl.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace(/\?dl=[01]/, "");
+    }
+    return cleanUrl;
+  }
+
+  function getStatusIcon(status) {
+    switch (status) {
+      case 'published': return '<i class="fa-solid fa-check"></i>';
+      case 'scheduled': return '<i class="fa-solid fa-clock"></i>';
+      case 'draft': return '<i class="fa-solid fa-file-pen"></i>';
+      case 'pending': return '<i class="fa-solid fa-shield-cat"></i>';
+      default: return '<i class="fa-solid fa-newspaper"></i>';
+    }
+  }
+
+  // Pre-load Authors & Categories Dropdowns
+  async function loadSelectors() {
+    try {
+      const [authorsSnapshot, categoriesSnapshot] = await Promise.all([
+        getDocs(collection(db, "authors")),
+        getDocs(collection(db, "categories"))
+      ]);
+
+      const authorFilter = document.getElementById("authorFilter");
+      const formAuthor = document.getElementById("formAuthor");
+      authorFilter.innerHTML = '<option value="all">ALL AUTHORS</option>';
+      formAuthor.innerHTML = '<option value="">Choose Author...</option>';
+
+      authorsSnapshot.forEach(d => {
+        const name = d.data().name || d.id;
+        authorFilter.innerHTML += `<option value="${d.id}">${name}</option>`;
+        formAuthor.innerHTML += `<option value="${d.id}">${name}</option>`;
+      });
+
+      const categoryFilter = document.getElementById("categoryFilter");
+      const formCategory = document.getElementById("formCategory");
+      categoryFilter.innerHTML = '<option value="all">ALL CATEGORIES</option>';
+      formCategory.innerHTML = '<option value="">Choose Genre...</option>';
+
+      categoriesSnapshot.forEach(d => {
+        const name = d.data().name || d.id;
+        categoryFilter.innerHTML += `<option value="${name}">${name}</option>`;
+        formCategory.innerHTML += `<option value="${name}">${name}</option>`;
+      });
+    } catch (err) {
+      console.error("Error loading selectors:", err);
+    }
+  }
+
+  // Firestore Realtime Stream
+  onSnapshot(newsPostsCol, (snapshot) => {
+    rawArticles = snapshot.docs.map(docSnapshot => {
+      const data = docSnapshot.data();
+
+      let createdTime = Date.now();
+      if (data.timestamp) {
+        createdTime = new Date(data.timestamp).getTime();
+      } else if (data.createdAt?.toMillis) {
+        createdTime = data.createdAt.toMillis();
+      }
+
+      return {
+        id: docSnapshot.id,
+        title: data.title || "Untitled Article",
+        slug: data.slug || `/news/${docSnapshot.id}`,
+        status: data.status || "published",
+        category: data.category || "General",
+        author: data.authorId || data.author || "Anonymous",
+        date: data.timestamp ? data.timestamp.split('T')[0] : "—",
+        views: data.views || 0,
+        thumb: formatDropboxUrl(data.imageUrl) || data.thumb || "https://via.placeholder.com/900x400?text=No+Media",
+        summary: data.summary || "",
+        content: data.content || "",
+        // Target Fields:
+        isFeatured: Boolean(data.isFeatured),
+        minutesRead: parseInt(data.minutesRead) || 0,
+        postType: data.postType || "standard",
+        createdAt: createdTime,
+        raw: data
+      };
+    });
+
+    rawArticles.sort((a, b) => b.createdAt - a.createdAt);
+    window.renderTable();
+  }, (error) => {
+    console.error("Firestore Listener Error:", error);
+  });
+
+  // Table Render Engine
+  window.renderTable = function() {
+    const tbody = document.getElementById('postsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+    const statusValue = document.getElementById('statusFilter').value;
+    const categoryValue = document.getElementById('categoryFilter').value;
+    const authorValue = document.getElementById('authorFilter').value;
+
+    filteredArticles = rawArticles.filter(item => {
+      const matchesSearch = item.title.toLowerCase().includes(searchValue) || item.slug.toLowerCase().includes(searchValue);
+      const matchesStatus = statusValue === 'all' || item.status === statusValue;
+      const matchesCategory = categoryValue === 'all' || item.category === categoryValue;
+      const matchesAuthor = authorValue === 'all' || item.author === authorValue;
+      return matchesSearch && matchesStatus && matchesCategory && matchesAuthor;
+    });
+
+    const total = filteredArticles.length;
+    const totalPages = Math.ceil(total / itemsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = Math.min(startIdx + itemsPerPage, total);
+    const pageItems = filteredArticles.slice(startIdx, endIdx);
+
+    if (pageItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-dim);">NO MATCHING MATRIX ENTRIES FOUND IN FIRESTORE</td></tr>`;
+    } else {
+      pageItems.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <div class="post-cell">
+              <div class="thumb-box">
+                <img src="${item.thumb}" alt="Thumbnail">
+              </div>
+              <div>
+                <div class="post-title-text">
+                  ${escapeHtml(item.title)}
+                  ${item.isFeatured ? '<i class="fa-solid fa-star featured-tag" title="Featured Post"></i>' : ''}
+                </div>
+                <div class="post-slug">${escapeHtml(item.slug)}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="status-badge ${item.status}">${getStatusIcon(item.status)} ${item.status}</span></td>
+          <td>
+            <span class="cat-pill">${escapeHtml(item.category)}</span><br>
+            <span class="type-pill">${escapeHtml(item.postType)}</span>
+          </td>
+          <td><span class="author-tag">${escapeHtml(item.author)}</span></td>
+          <td>${escapeHtml(item.date)}</td>
+          <td class="metrics-cell">
+            <i class="fa-solid fa-eye"></i> ${Number(item.views).toLocaleString()}<br>
+            <i class="fa-solid fa-clock"></i> ${item.minutesRead}m
+          </td>
+          <td class="actions-cell">
+            <div class="actions-flex">
+              <button class="cyber-btn sm icon-only" title="Edit Article" onclick="window.openArticleModal('${item.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button class="cyber-btn sm icon-only" title="Preview Live" onclick="window.previewArticle('${item.id}')"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+              <button class="cyber-btn sm icon-only" title="Duplicate Post" onclick="window.duplicateArticle('${item.id}')"><i class="fa-solid fa-copy"></i></button>
+              <button class="cyber-btn sm pink icon-only" title="Trash Post" onclick="window.deleteArticle('${item.id}')"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    const showStart = total === 0 ? 0 : startIdx + 1;
+    document.getElementById('paginationInfo').innerHTML = `SHOWING <span>${showStart} - ${endIdx}</span> OF <span>${total}</span> POSTS | FIRESTORE REALTIME SYNC`;
+    document.getElementById('prevBtn').disabled = currentPage === 1;
+    document.getElementById('nextBtn').disabled = currentPage >= totalPages || total === 0;
+    document.getElementById('queryCost').textContent = `${pageItems.length} READS / STREAM`;
+  };
+
+  // Pagination Handlers
+  window.handleFilterChange = function() {
+    currentPage = 1;
+    window.renderTable();
+  };
+
+  window.prevPage = function() {
+    if (currentPage > 1) {
+      currentPage--;
+      window.renderTable();
+    }
+  };
+
+  window.nextPage = function() {
+    const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
+    if (currentPage < totalPages) {
+      currentPage++;
+      window.renderTable();
+    }
+  };
+
+  // Slug Generator
+  window.autoGenerateSlug = function() {
+    const titleVal = document.getElementById('formTitle').value;
+    const slugVal = titleVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    document.getElementById('formSlug').value = slugVal ? `/news/${slugVal}` : '';
+  };
+
+  // Populate Modal Fields (Including isFeatured, minutesRead, postType)
+  window.openArticleModal = function(id = null) {
+    const modal = document.getElementById('articleModal');
+    if (id) {
+      const item = rawArticles.find(a => a.id === id);
+      if (!item) return;
+      document.getElementById('modalTitle').textContent = "COMMAND // EDIT ARTICLE";
+      document.getElementById('editArticleId').value = item.id;
+      document.getElementById('formTitle').value = item.title;
+      document.getElementById('formSlug').value = item.slug;
+      document.getElementById('formStatus').value = item.status;
+      document.getElementById('formCategory').value = item.category;
+      document.getElementById('formAuthor').value = item.author;
+      
+      // Target Fields Set:
+      document.getElementById('formPostType').value = item.postType || 'standard';
+      document.getElementById('formMinutesRead').value = item.minutesRead || 0;
+      document.getElementById('formIsFeatured').checked = Boolean(item.isFeatured);
+
+      document.getElementById('formThumb').value = item.thumb || '';
+      document.getElementById('formSummary').value = item.summary || '';
+      document.getElementById('formContent').value = item.content || '';
+    } else {
+      document.getElementById('modalTitle').textContent = "COMMAND // NEW ARTICLE";
+      document.getElementById('editArticleId').value = '';
+      document.getElementById('formTitle').value = '';
+      document.getElementById('formSlug').value = '';
+      document.getElementById('formStatus').value = 'published';
+      document.getElementById('formCategory').value = '';
+      document.getElementById('formAuthor').value = '';
+      
+      // Target Defaults Set:
+      document.getElementById('formPostType').value = 'standard';
+      document.getElementById('formMinutesRead').value = 5;
+      document.getElementById('formIsFeatured').checked = false;
+
+      document.getElementById('formThumb').value = '';
+      document.getElementById('formSummary').value = '';
+      document.getElementById('formContent').value = '';
+    }
+    modal.classList.add('active');
+  };
+
+  window.closeArticleModal = function() {
+    document.getElementById('articleModal').classList.remove('active');
+  };
+
+  // Write to Firestore with Exact Field Data Types
+  window.saveArticle = async function() {
+    const id = document.getElementById('editArticleId').value;
+    const title = document.getElementById('formTitle').value.trim();
+    const slug = document.getElementById('formSlug').value.trim();
+    const status = document.getElementById('formStatus').value;
+    const category = document.getElementById('formCategory').value;
+    const author = document.getElementById('formAuthor').value;
+    
+    // Extracted Fields with Type Casting:
+    const postType = document.getElementById('formPostType').value;               // string
+    const minutesRead = parseInt(document.getElementById('formMinutesRead').value, 10) || 0; // int64 (number)
+    const isFeatured = document.getElementById('formIsFeatured').checked;          // boolean
+
+    const thumb = formatDropboxUrl(document.getElementById('formThumb').value);
+    const summary = document.getElementById('formSummary').value.trim();
+    const content = document.getElementById('formContent').value.trim();
+
+    if (!title) {
+      alert("Headline title is required.");
+      return;
+    }
+
+    const docId = id || doc(newsPostsCol).id;
+    const docRef = doc(db, "newsPosts", docId);
+
+    try {
+      let baseData = {};
+      if (id) {
+        const origDoc = await getDoc(docRef);
+        if (origDoc.exists()) baseData = origDoc.data();
+      }
+
+      const now = new Date().toISOString();
+      const payload = {
+        ...baseData,
+        id: docId,
+        title,
+        slug: slug || `/news/${docId}`,
+        status,
+        category,
+        authorId: author,
+        // Target Fields Saved:
+        postType,
+        minutesRead,
+        isFeatured,
+        imageUrl: thumb,
+        summary,
+        content,
+        timestamp: now
+      };
+
+      await setDoc(docRef, payload);
+      window.closeArticleModal();
+    } catch (err) {
+      console.error("Error writing to Firestore:", err);
+      alert("Failed to write to Firestore: " + err.message);
+    }
+  };
+
+  // Delete Action
+  window.deleteArticle = async function(id) {
+    if (confirm("CONFIRMATION: Permanently erase this document from Firestore?")) {
+      try {
+        await deleteDoc(doc(db, "newsPosts", id));
+      } catch (err) {
+        console.error("Error deleting document:", err);
+        alert("Delete failed: " + err.message);
+      }
+    }
+  };
+
+  // Duplicate Action
+  window.duplicateArticle = async function(id) {
+    const item = rawArticles.find(a => a.id === id);
+    if (!item) return;
+
+    const newDocRef = doc(newsPostsCol);
+    const now = new Date().toISOString();
+    
+    const copyPayload = {
+      ...item.raw,
+      id: newDocRef.id,
+      title: `${item.title} (COPY)`,
+      slug: `${item.slug}-copy`,
+      status: 'draft',
+      timestamp: now
+    };
+
+    try {
+      await setDoc(newDocRef, copyPayload);
+    } catch (err) {
+      console.error("Error duplicating document:", err);
+    }
+  };
+
+  // Preview Modal Renderer
+  window.previewArticle = function(id) {
+    const item = rawArticles.find(a => a.id === id);
+    if (!item) return;
+
+    const previewBody = document.getElementById('previewBody');
+    previewBody.innerHTML = `
+      <div style="border:1px solid var(--panel-border); padding:16px; background:#f8fafc;">
+        <img src="${item.thumb}" style="width:100%; max-height:200px; object-fit:cover; margin-bottom:12px; border:1px solid var(--panel-border);" alt="Cover">
+        <h2 style="color:#0f172a; font-family:'Orbitron', sans-serif; font-size:1.2rem; margin-bottom:8px;">
+          ${escapeHtml(item.title)}
+          ${item.isFeatured ? '<span style="color:var(--neon-yellow); font-size:0.8rem;">[FEATURED]</span>' : ''}
+        </h2>
+        <p style="color:var(--neon-cyan); font-size:0.8rem; margin-bottom:12px; font-weight:bold;">${escapeHtml(item.slug)}</p>
+        <p style="color:var(--text-main); font-size:0.85rem; margin-bottom:12px;">${escapeHtml(item.summary)}</p>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:0.75rem; color:var(--text-dim); border-top:1px solid var(--panel-border); padding-top:10px;">
+          <span>AUTHOR: ${escapeHtml(item.author)}</span> | 
+          <span>CATEGORY: ${escapeHtml(item.category)}</span> | 
+          <span>TYPE: ${escapeHtml(item.postType)}</span> | 
+          <span>READ TIME: ${item.minutesRead} min</span>
+        </div>
+      </div>
+    `;
+    document.getElementById('previewModal').classList.add('active');
+  };
+
+  window.closePreviewModal = function() {
+    document.getElementById('previewModal').classList.remove('active');
+  };
+
+  // Startup Load
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadSelectors();
+  });
+</script>
+</body>
+</html>

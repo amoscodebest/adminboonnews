@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER-CMS // Content Workspace (Light Edition)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
+    <style>
+        :root {
+            --bg-deep: #f1f5f9;
+            --bg-panel: #ffffff;
+            --bg-card: #ffffff;
+            --tech-cyan: #0284c7;
+            --tech-pink: #e11d48;
+            --tech-yellow: #d97706;
+            --tech-green: #059669;
+            --tech-blue: #2563eb;
+            --text-main: #0f172a;
+            --text-dim: #64748b;
+            --border-glow: rgba(2, 132, 199, 0.25);
+            --panel-border: #cbd5e1;
+            --input-bg: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Share Tech Mono', monospace;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden !important;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Light Mode Subtle Scanline Overlay */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: none;
+            z-index: 9999;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(2, 132, 199, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(2, 132, 199, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        /* Toast Notifications */
+        .notification {
+            position: fixed;
+            top: 20px; right: 20px;
+            padding: 12px 20px;
+            background: #ffffff;
+            border: 2px solid var(--tech-cyan);
+            color: var(--text-main);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            display: none;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .notification.error { border-color: var(--tech-pink); box-shadow: 0 10px 25px rgba(225, 29, 72, 0.2); }
+        .notification.info { border-color: var(--tech-yellow); box-shadow: 0 10px 25px rgba(217, 119, 6, 0.2); }
+
+        /* Mobile Header Bar */
+        .mobile-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel);
+            border-bottom: 2px solid var(--panel-border);
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .menu-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--tech-cyan);
+            color: var(--tech-cyan);
+            padding: 8px 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.1);
+        }
+
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Layout Container */
+        .app-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--panel-border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1002;
+            transition: transform 0.3s ease;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.02);
+        }
+
+        .brand-box { margin-bottom: 20px; padding-left: 10px; }
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--tech-cyan);
+            letter-spacing: 2px;
+        }
+        .brand-subtitle { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; font-weight: bold; }
+
+        .user-status-box {
+            padding: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            margin-bottom: 20px;
+            font-size: 0.75rem;
+            word-break: break-all;
+            color: var(--text-main);
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-item a, .nav-item button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-left: 3px solid transparent;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item a:hover, .nav-item.active a, .nav-item button:hover {
+            background: rgba(2, 132, 199, 0.08);
+            color: var(--tech-cyan);
+            border-left-color: var(--tech-cyan);
+        }
+
+        /* Main Workspace */
+        main {
+            padding: 24px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-width: 0;
+        }
+
+        /* Top Action Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--panel-border);
+            padding-bottom: 16px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .view-title { min-width: 0; }
+        .view-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .view-title p { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; font-weight: 600; }
+
+        .action-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .cyber-btn {
+            background: #ffffff;
+            border: 1px solid var(--tech-cyan);
+            color: var(--tech-cyan);
+            padding: 9px 16px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .cyber-btn:hover { background: var(--tech-cyan); color: #ffffff; }
+        .cyber-btn.green { border-color: var(--tech-green); color: var(--tech-green); }
+        .cyber-btn.green:hover { background: var(--tech-green); color: #ffffff; }
+        .cyber-btn.red { border-color: var(--tech-pink); color: var(--tech-pink); }
+        .cyber-btn.red:hover { background: var(--tech-pink); color: #ffffff; }
+        .cyber-btn.yellow { border-color: var(--tech-yellow); color: var(--tech-yellow); }
+        .cyber-btn.yellow:hover { background: var(--tech-yellow); color: #ffffff; }
+
+        /* Banner Alert Controls */
+        .cyber-alert {
+            background: #fffbeb;
+            border: 1px solid var(--tech-yellow);
+            color: #92400e;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-weight: bold;
+        }
+
+        /* Grid Setup */
+        .editor-workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            align-items: start;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .cyber-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--panel-border);
+            padding: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+            min-width: 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .panel-title span { color: var(--tech-cyan); font-size: 0.7rem; }
+
+        /* Form Control Inputs */
+        .form-group { margin-bottom: 14px; min-width: 0; }
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--tech-cyan);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .cyber-input, .cyber-select, .cyber-textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+
+        .cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus {
+            border-color: var(--tech-cyan);
+            background: #ffffff;
+        }
+
+        .cyber-input.headline-input {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            font-weight: 700;
+        }
+
+        /* Quill Canvas Styling for Light Mode */
+        .editor-wrapper { width: 100%; overflow: hidden; }
+        .ql-toolbar.ql-snow {
+            background: #f8fafc !important;
+            border-color: var(--panel-border) !important;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 6px !important;
+        }
+
+        .ql-stroke { stroke: var(--text-main) !important; }
+        .ql-fill { fill: var(--text-main) !important; }
+        .ql-picker { color: var(--text-main) !important; }
+
+        .ql-container.ql-snow {
+            background: #ffffff !important;
+            border-color: var(--panel-border) !important;
+            color: var(--text-main) !important;
+            min-height: 280px;
+            font-size: 0.95rem;
+        }
+
+        /* Toggles */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--panel-border);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px; height: 22px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e2e8f0;
+            border: 1px solid var(--panel-border);
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: var(--text-dim);
+            transition: 0.3s;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: rgba(225, 29, 72, 0.15);
+            border-color: var(--tech-pink);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+            background-color: var(--tech-pink);
+        }
+
+        /* Article Live Card Preview */
+        .preview-card {
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+
+        .preview-image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #f1f5f9;
+        }
+
+        .preview-image-wrapper img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay-icon {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            background: rgba(225, 29, 72, 0.9);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .preview-body { padding: 12px; }
+        .preview-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background: rgba(2, 132, 199, 0.1);
+            color: var(--tech-cyan);
+            font-size: 0.65rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .preview-title { font-size: 0.95rem; font-weight: bold; color: var(--text-main); margin-bottom: 6px; }
+        .preview-summary { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; line-height: 1.3; }
+        .preview-content { font-size: 0.8rem; color: var(--text-main); line-height: 1.4; border-top: 1px dashed var(--panel-border); padding-top: 8px; max-height: 150px; overflow-y: auto; }
+
+        /* Status Ticker */
+        .sys-ticker {
+            margin-top: 20px;
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            padding: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .editor-workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-header { display: flex; }
+            .app-container { grid-template-columns: 1fr; }
+            
+            aside {
+                position: fixed; 
+                top: 0; left: 0; 
+                height: 100vh; 
+                width: 260px;
+                transform: translateX(-100%);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            }
+            aside.open { transform: translateX(0); }
+            
+            main { padding: 14px; }
+            .top-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+            .action-group { width: 100%; display: flex; flex-direction: column; }
+            .cyber-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+    
+    <div id="notification" class="notification"></div>
+
+    <header class="mobile-header">
+        <div class="brand-title">BoonNews_CMS</div>
+        <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Toggle Drawer Menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <div class="app-container">
+        <aside id="sideNav">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-title">BoonNews_CMS</div>
+                    <div class="brand-subtitle">ADMIN ADD POST</div>
+                </div>
+
+                <div class="user-status-box" id="userDisplay">
+                    Authenticating credentials...
+                </div>
+
+                <ul class="nav-menu">
+                  <li class="nav-item">
+                        <a href="index.html"><i class="fa-solid fa-terminal"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="posts.html"><i class="fa-solid fa-newspaper"></i> Articles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="editor.html"><i class="fa-solid fa-plus"></i> Add Post</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="category.html"><i class="fa-solid fa-folder-tree"></i> Categories</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="posts.html"><i class="fa-solid  fa-file-lines"></i> Editor</a>
+                    </li>
+                    <li class="nav-item active"><a href="#"><i class="fa-solid fa-pen-to-square"></i> Post Editor</a></li>
+                    <li class="nav-item"><button id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button></li>
+                </ul>
+            </div>
+            
+            <div style="font-size: 0.7rem; color: var(--text-dim); text-align: center; border-top: 1px solid var(--panel-border); padding-top: 10px; font-weight: bold;">
+                STATUS: <span id="draftStatus" style="color:var(--tech-green);">Auto-save Enabled</span>
+            </div>
+        </aside>
+
+        <main>
+            <div id="draftAlert" class="cyber-alert">
+                <div>
+                    <i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>
+                    <span>Unsaved draft detected in browser storage. Restore session?</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="cyber-btn yellow" id="btnRestoreDraft" style="padding: 4px 8px; font-size: 0.75rem;">Restore</button>
+                    <button type="button" class="cyber-btn red" id="btnDiscardDraft" style="padding: 4px 8px; font-size: 0.75rem;">Discard</button>
+                </div>
+            </div>
+
+            <form id="newsForm">
+                
+                <div class="top-bar">
+                    <div class="view-title">
+                        <h1 id="formHeaderTitle"><i class="fa-solid fa-pen-nib me-2"></i> Create New Post</h1>
+                        <p>Write news article and  reports.</p>
+                    </div>
+                    <div class="action-group">
+                        <button type="button" class="cyber-btn red" id="btnClearForm">
+                            <i class="fa-solid fa-trash"></i> Reset
+                        </button>
+                        <button type="button" class="cyber-btn yellow" id="btnManualSaveDraft">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Draft
+                        </button>
+                        <button type="submit" class="cyber-btn green">
+                            <i class="fa-solid fa-paper-plane"></i> <span id="btnSubmitText">Publish Article</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="editor-workspace-grid">
+                    
+                    <div class="main-canvas">
+                        
+                        <div class="cyber-panel">
+                            <div class="form-group">
+                                <label class="form-label" for="title">Article Title/Headline</label>
+                                <input type="text" id="title" class="cyber-input headline-input" placeholder="Enter headline text here..." required>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="postType">Post Type</label>
+                                    <select id="postType" class="cyber-select" required>
+                                        <option value="standard">Standard Article</option>
+                                        <option value="editor-choice">Editor's Choice</option>
+                                        <option value="video">Video Feed Post</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="videoUrlGroup" style="display: none;">
+                                    <label class="form-label" for="videoUrl">Video Stream Source URL</label>
+                                    <input type="url" id="videoUrl" class="cyber-input" placeholder="https://youtube.com/watch?v=...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Article Content <span>FULL BODY</span></div>
+                            <div class="editor-wrapper">
+                                <div id="editor"></div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Article Overview & Metadata</div>
+                            <div class="form-group">
+                                <label class="form-label" for="summary">Summary/Excerpt </label>
+                                <textarea id="summary" class="cyber-textarea" style="min-height: 70px;" placeholder="Brief article content  article..."></textarea>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="tags">Tags (Comma-Separated)</label>
+                                    <input type="text" id="tags" class="cyber-input" placeholder="politics, election, osun">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="minutesRead">Estimated Read Time (Mins)</label>
+                                    <input type="number" id="minutesRead" class="cyber-input" min="1" placeholder="Auto-calculated...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Search Engine Optimization <span>SEO ENGINE</span></div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="focusKeyword">Focus Keyword</label>
+                                <input type="text" id="focusKeyword" class="cyber-input" placeholder="e.g. Osun Vote Counts">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="metaTitle">SEO Meta Title</label>
+                                <input type="text" id="metaTitle" class="cyber-input" placeholder="Overrides headline if specified...">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="metaDescription">SEO Meta Description</label>
+                                <textarea id="metaDescription" class="cyber-textarea" style="min-height: 50px;" placeholder="Meta description for search engine result pages..."></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="sidebar-controls">
+                        
+                        <div class="cyber-panel">
+                            <div class="panel-title">Publishing Control</div>
+                            <div class="form-group">
+                                <label class="form-label" for="status">Publication Status</label>
+                                <select id="status" class="cyber-select">
+                                    <option value="published">PUBLISHED IMMEDIATELY</option>
+                                    <option value="draft">Save As DRAFT</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div class="toggle-row">
+                                    <span class="form-label" style="margin: 0;">Set As Hero (Featured) </span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="isFeatured">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Category & Author</div>
+                            <div class="form-group">
+                                <label class="form-label" for="category">Category</label>
+                                <select id="category" class="cyber-select" required>
+                                    <option value="">Fetching Categories...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="author">Author Account</label>
+                                <select id="author" class="cyber-select" required>
+                                    <option value="">Fetching Authors...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Article  Image Media</div>
+                            <div class="form-group">
+                                <label class="form-label" for="imageUrl">Dropbox Image Direct Link</label>
+                                <input type="url" id="imageUrl" class="cyber-input" placeholder="https://www.dropbox.com/s/...">
+                                <div id="imageStatus" style="font-size:0.7rem; margin-top: 4px; font-weight: bold;"></div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Live Preview Card</div>
+                            <div class="preview-card">
+                                <div class="preview-image-wrapper">
+                                    <img id="previewImage" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='400' viewBox='0 0 900 400'><rect width='100%' height='100%' fill='%23e2e8f0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='18'>Awaiting Media Asset</text></svg>" alt="Preview Asset">
+                                    <div id="videoIconOverlay" class="video-overlay-icon"><i class="fa-solid fa-play"></i></div>
+                                </div>
+                                <div class="preview-body">
+                                    <span id="previewCategory" class="preview-badge">CATEGORY</span>
+                                    <span id="previewSection" class="preview-badge" style="background: rgba(225, 29, 72, 0.1); color: var(--tech-pink);">Standard</span>
+                                    <span class="preview-badge" style="background: rgba(217, 119, 6, 0.1); color: var(--tech-yellow);"><span id="previewMinutes">0</span> Min Read</span>
+                                    <div id="previewTitle" class="preview-title">Headline Preview</div>
+                                    <div id="previewSummary" class="preview-summary">Excerpt snippet will render here...</div>
+                                    <div id="previewContent" class="preview-content">Body text preview...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </form>
+
+            <div class="sys-ticker">
+                <div>FIREBASE_AUTH: <span style="color:var(--tech-green)">ONLINE</span></div>
+                <div>SESSION: <span style="color:var(--tech-cyan)">ACTIVE</span></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
+    <script>
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sideNav = document.getElementById('sideNav');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        function toggleDrawer() {
+            sideNav.classList.toggle('open');
+            drawerOverlay.classList.toggle('active');
+        }
+
+        menuToggleBtn.addEventListener('click', toggleDrawer);
+        drawerOverlay.addEventListener('click', toggleDrawer);
+    </script>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+      import { 
+        getAuth, onAuthStateChanged, signOut 
+      } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+      import { 
+        getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp 
+      } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBfoxEnVep0wX5V_KVS-cd8o5sUMvrFY4c",
+        authDomain: "primeintelmedia-e2fe3.firebaseapp.com",
+        databaseURL: "https://primeintelmedia-e2fe3-default-rtdb.firebaseio.com",
+        projectId: "primeintelmedia-e2fe3",
+        storageBucket: "primeintelmedia-e2fe3.firebasestorage.app",
+        messagingSenderId: "228866357632",
+        appId: "1:228866357632:web:72dc9942f1cd41d857a965",
+        measurementId: "G-G0HRRV932S"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const LOCAL_STORAGE_KEY = "admin_add_post_draft";
+      const FALLBACK_IMG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400"><rect width="100%" height="100%" fill="%23e2e8f0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2364748b" font-size="18">Awaiting Dropbox Media Asset</text></svg>';
+
+      let editingPostId = null;
+      let isSubmitting = false;
+
+      // INITIALIZE QUILL RICH TEXT ENGINE
+      const quill = new Quill('#editor', {
+        theme: 'snow',
+        placeholder: 'Write main body text here...',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            ['link', 'clean']
+          ]
+        }
+      });
+
+      // PREVENT BASE64 PASTING (Storage Expiration Protection)
+      quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+        delta.ops.forEach(op => {
+          if (op.insert && typeof op.insert === 'object' && op.insert.image) {
+            if (op.insert.image.startsWith('data:image')) {
+              op.insert.image = '';
+              showNotification("Base64 inline images disabled. Please use Dropbox links.", "error");
+            }
+          }
+        });
+        return delta;
+      });
+
+      const elements = {
+        form: document.getElementById("newsForm"),
+        title: document.getElementById("title"),
+        postType: document.getElementById("postType"),
+        status: document.getElementById("status"),
+        videoUrlGroup: document.getElementById("videoUrlGroup"),
+        videoUrl: document.getElementById("videoUrl"),
+        summary: document.getElementById("summary"),
+        tags: document.getElementById("tags"),
+        minutesRead: document.getElementById("minutesRead"),
+        author: document.getElementById("author"),
+        category: document.getElementById("category"),
+        imageUrl: document.getElementById("imageUrl"),
+        focusKeyword: document.getElementById("focusKeyword"),
+        metaTitle: document.getElementById("metaTitle"),
+        metaDescription: document.getElementById("metaDescription"),
+        isFeatured: document.getElementById("isFeatured"),
+        imageStatus: document.getElementById("imageStatus"),
+        
+        pTitle: document.getElementById("previewTitle"),
+        pCategory: document.getElementById("previewCategory"),
+        pSection: document.getElementById("previewSection"),
+        pMinutes: document.getElementById("previewMinutes"),
+        pSummary: document.getElementById("previewSummary"),
+        pContent: document.getElementById("previewContent"),
+        pImage: document.getElementById("previewImage"),
+        pVideoOverlay: document.getElementById("videoIconOverlay"),
+        notification: document.getElementById("notification"),
+
+        draftAlert: document.getElementById("draftAlert"),
+        btnRestoreDraft: document.getElementById("btnRestoreDraft"),
+        btnDiscardDraft: document.getElementById("btnDiscardDraft"),
+        btnManualSaveDraft: document.getElementById("btnManualSaveDraft"),
+        btnClearForm: document.getElementById("btnClearForm"),
+        draftStatus: document.getElementById("draftStatus"),
+        formHeaderTitle: document.getElementById("formHeaderTitle"),
+        btnSubmitText: document.getElementById("btnSubmitText"),
+        userDisplay: document.getElementById("userDisplay"),
+        btnLogout: document.getElementById("btnLogout")
+      };
+
+      // CHECK AUTHENTICATION STATE
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          showNotification("Unauthorized access! Redirecting...", "error");
+          setTimeout(() => { window.location.href = "login.html"; }, 1500);
+        } else {
+          elements.userDisplay.textContent = `User: ${user.email}`;
+        }
+      });
+
+      elements.btnLogout.addEventListener("click", () => signOut(auth));
+
+      function createSlug(text) {
+        return text.toLowerCase().trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      function showNotification(message, type = "success") {
+        elements.notification.textContent = message;
+        elements.notification.className = `notification ${type}`;
+        elements.notification.style.display = "block";
+        setTimeout(() => { elements.notification.style.display = "none"; }, 3200);
+      }
+
+      // DROPBOX PARSER ENGINE
+      function formatDropboxUrl(url) {
+        if (!url) return "";
+        let cleanUrl = url.trim();
+        if (cleanUrl.includes("dropbox.com")) {
+          cleanUrl = cleanUrl
+            .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+            .replace("dl.dropbox.com", "dl.dropboxusercontent.com")
+            .replace("?dl=0", "")
+            .replace("?dl=1", "");
+        }
+        return cleanUrl;
+      }
+
+      function autoCalculateReadTime() {
+        const text = quill.getText().trim();
+        if (!text) {
+          elements.minutesRead.value = "";
+          return;
+        }
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        elements.minutesRead.value = Math.max(1, Math.ceil(wordCount / 200));
+      }
+
+      function syncRenderPreview() {
+        const sectionLabels = {
+          'standard': 'Standard Story',
+          'editor-choice': "Editor's Choice",
+          'video': 'Video Feed'
+        };
+
+        elements.pTitle.textContent = elements.title.value.trim() || "Article Title Preview";
+        elements.pSummary.textContent = elements.summary.value.trim() || "Excerpt description preview will render here...";
+        elements.pCategory.textContent = elements.category.value || "Category";
+        elements.pMinutes.textContent = elements.minutesRead.value || "0";
+        
+        const plainText = quill.getText().trim();
+        if (plainText) {
+          elements.pContent.innerHTML = typeof DOMPurify !== 'undefined' 
+            ? DOMPurify.sanitize(quill.root.innerHTML) 
+            : quill.root.innerHTML;
+        } else {
+          elements.pContent.innerHTML = `<small style="color:var(--text-dim)">Body text preview will render here...</small>`;
+        }
+
+        const contextRoute = elements.postType.value;
+        elements.pSection.textContent = contextRoute ? `Target: ${sectionLabels[contextRoute]}` : "Target: Standard";
+        elements.pVideoOverlay.style.display = (contextRoute === "video") ? "flex" : "none";
+
+        const cleanImgUrl = formatDropboxUrl(elements.imageUrl.value);
+        elements.pImage.src = cleanImgUrl || FALLBACK_IMG;
+        elements.pImage.onerror = () => { elements.pImage.src = FALLBACK_IMG; };
+      }
+
+      function saveDraftToLocalStorage() {
+        if (editingPostId) return;
+        const draftData = {
+          title: elements.title.value,
+          postType: elements.postType.value,
+          status: elements.status.value,
+          videoUrl: elements.videoUrl.value,
+          contentHtml: quill.root.innerHTML,
+          summary: elements.summary.value,
+          tags: elements.tags.value,
+          minutesRead: elements.minutesRead.value,
+          author: elements.author.value,
+          category: elements.category.value,
+          imageUrl: elements.imageUrl.value,
+          focusKeyword: elements.focusKeyword.value,
+          metaTitle: elements.metaTitle.value,
+          metaDescription: elements.metaDescription.value,
+          isFeatured: elements.isFeatured.checked,
+          savedAt: new Date().toLocaleTimeString()
+        };
+
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(draftData));
+        elements.draftStatus.textContent = `Draft saved at ${draftData.savedAt}`;
+      }
+
+      function restoreDraft() {
+        const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!rawData) return;
+
+        const data = JSON.parse(rawData);
+        elements.title.value = data.title || "";
+        elements.postType.value = data.postType || "";
+        elements.status.value = data.status || "published";
+        elements.videoUrl.value = data.videoUrl || "";
+        elements.summary.value = data.summary || "";
+        elements.tags.value = data.tags || "";
+        elements.minutesRead.value = data.minutesRead || "";
+        elements.author.value = data.author || "";
+        elements.category.value = data.category || "";
+        elements.imageUrl.value = data.imageUrl || "";
+        elements.focusKeyword.value = data.focusKeyword || "";
+        elements.metaTitle.value = data.metaTitle || "";
+        elements.metaDescription.value = data.metaDescription || "";
+        elements.isFeatured.checked = !!data.isFeatured;
+
+        if (data.contentHtml) quill.clipboard.dangerouslyPasteHTML(data.contentHtml);
+
+        if (data.postType === "video") {
+          elements.videoUrlGroup.style.display = "block";
+          elements.videoUrl.setAttribute("required", "required");
+        }
+
+        elements.draftAlert.style.display = "none";
+        syncRenderPreview();
+        showNotification("Local draft restored!", "info");
+      }
+
+      function clearDraft() {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        elements.draftAlert.style.display = "none";
+        elements.draftStatus.textContent = "Auto-save Enabled";
+      }
+
+      // DETECT EDIT MODE VIA URL QUERY PARAMETER (?edit=POST_ID)
+      async function checkForEditMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('edit');
+
+        if (!postId) {
+          const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (rawData) elements.draftAlert.style.display = "flex";
+          return;
+        }
+
+        try {
+          const docRef = doc(db, "newsPosts", postId);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            editingPostId = postId;
+            const post = docSnap.data();
+
+            elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-to-square me-2"></i>Edit Article (ID: ${postId.substring(0,6)}...)`;
+            elements.btnSubmitText.textContent = "Update Existing Post";
+            elements.draftStatus.textContent = "Edit Mode Active";
+
+            elements.title.value = post.title || "";
+            elements.postType.value = post.postType || "standard";
+            elements.status.value = post.status || "published";
+            elements.summary.value = post.summary || "";
+            elements.tags.value = Array.isArray(post.tags) ? post.tags.join(", ") : "";
+            elements.minutesRead.value = post.minutesRead || 1;
+            elements.author.value = post.authorId || "";
+            elements.category.value = post.category || "";
+            elements.imageUrl.value = post.imageUrl || "";
+            elements.isFeatured.checked = !!post.isFeatured;
+
+            if (post.videoUrl) {
+              elements.videoUrl.value = post.videoUrl;
+              elements.videoUrlGroup.style.display = "block";
+            }
+
+            if (post.seo) {
+              elements.focusKeyword.value = post.seo.focusKeyword || "";
+              elements.metaTitle.value = post.seo.metaTitle || "";
+              elements.metaDescription.value = post.seo.metaDescription || "";
+            }
+
+            if (post.content) quill.clipboard.dangerouslyPasteHTML(post.content);
+
+            syncRenderPreview();
+            showNotification("Loaded article for editing.", "info");
+          }
+        } catch (err) {
+          console.error("Error loading document for editing:", err);
+          showNotification("Could not load post data.", "error");
+        }
+      }
+
+      async function loadFormSelectors() {
+        try {
+          const [authorsSnapshot, categoriesSnapshot] = await Promise.all([
+            getDocs(collection(db, "authors")),
+            getDocs(collection(db, "categories"))
+          ]);
+
+          elements.author.innerHTML = '<option value="">Select Author Account</option>';
+          authorsSnapshot.forEach(docInst => {
+            elements.author.innerHTML += `<option value="${docInst.id}">${docInst.data().name}</option>`;
+          });
+
+          elements.category.innerHTML = '<option value="">Select Category </option>';
+          categoriesSnapshot.forEach(docInst => {
+            const catName = docInst.data().name;
+            elements.category.innerHTML += `<option value="${catName}">${catName}</option>`;
+          });
+        } catch (err) {
+          console.error("Fetch error:", err);
+          showNotification("Failed to fetch dropdown options.", "error");
+        }
+      }
+
+      // EVENT LISTENERS
+      quill.on('text-change', () => {
+        autoCalculateReadTime();
+        syncRenderPreview();
+        saveDraftToLocalStorage();
+      });
+
+      elements.postType.addEventListener("change", () => {
+        if (elements.postType.value === "video") {
+          elements.videoUrlGroup.style.display = "block";
+          elements.videoUrl.setAttribute("required", "required");
+        } else {
+          elements.videoUrlGroup.style.display = "none";
+          elements.videoUrl.removeAttribute("required");
+          elements.videoUrl.value = "";
+        }
+        syncRenderPreview();
+        saveDraftToLocalStorage();
+      });
+
+      ["title", "summary", "category", "minutesRead", "tags", "author", "videoUrl", "status", "focusKeyword", "metaTitle", "metaDescription"].forEach(id => {
+        elements[id].addEventListener("input", () => { syncRenderPreview(); saveDraftToLocalStorage(); });
+        elements[id].addEventListener("change", () => { syncRenderPreview(); saveDraftToLocalStorage(); });
+      });
+
+      elements.isFeatured.addEventListener("change", saveDraftToLocalStorage);
+
+      let imageCheckTimer;
+      elements.imageUrl.addEventListener("input", () => {
+        clearTimeout(imageCheckTimer);
+        const targetUrl = formatDropboxUrl(elements.imageUrl.value);
+        saveDraftToLocalStorage();
+
+        if (!targetUrl) {
+          elements.imageStatus.innerHTML = "";
+          syncRenderPreview();
+          return;
+        }
+
+        elements.imageStatus.innerHTML = `<span style="color:var(--tech-cyan)"><i class="fa-solid fa-spinner fa-spin me-1"></i>Validating Dropbox link...</span>`;
+
+        imageCheckTimer = setTimeout(() => {
+          const imageTester = new Image();
+          imageTester.onload = () => {
+            elements.imageStatus.innerHTML = `<span style="color:var(--tech-green)"><i class="fa-solid fa-circle-check me-1"></i>Dropbox image validated.</span>`;
+            syncRenderPreview();
+          };
+          imageTester.onerror = () => {
+            elements.imageStatus.innerHTML = `<span style="color:var(--tech-pink)"><i class="fa-solid fa-circle-xmark me-1"></i>Link error. Ensure public permissions.</span>`;
+          };
+          imageTester.src = targetUrl;
+        }, 400);
+      });
+
+      window.addEventListener("beforeunload", (e) => {
+        if (!isSubmitting && (quill.getText().trim().length > 0 || elements.title.value.trim().length > 0)) {
+          e.preventDefault();
+          e.returnValue = "";
+        }
+      });
+
+      elements.btnRestoreDraft.addEventListener("click", restoreDraft);
+      elements.btnDiscardDraft.addEventListener("click", clearDraft);
+
+      elements.btnManualSaveDraft.addEventListener("click", () => {
+        saveDraftToLocalStorage();
+        showNotification("Draft saved to browser storage!", "info");
+      });
+
+      elements.btnClearForm.addEventListener("click", () => {
+        if (confirm("Reset form and clear workspace?")) {
+          elements.form.reset();
+          quill.setText('');
+          clearDraft();
+          editingPostId = null;
+          elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-nib me-2"></i>Create New Post`;
+          elements.btnSubmitText.textContent = "Publish Article";
+          elements.videoUrlGroup.style.display = "none";
+          elements.imageStatus.innerHTML = "";
+          syncRenderPreview();
+          showNotification("Workspace cleared.");
+        }
+      });
+
+      // SUBMIT HANDLER
+      elements.form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const title = elements.title.value.trim();
+        const plainTextContent = quill.getText().trim();
+        const postType = elements.postType.value;
+        const category = elements.category.value;
+        const authorId = elements.author.value;
+
+        if (!title || !plainTextContent || !postType || !category || !authorId) {
+          return showNotification("Please complete all required fields.", "error");
+        }
+
+        isSubmitting = true;
+
+        const rawHtml = quill.root.innerHTML.trim();
+        const sanitizedContent = typeof DOMPurify !== 'undefined' 
+          ? DOMPurify.sanitize(rawHtml) 
+          : rawHtml;
+
+        try {
+          const nowTimestamp = Timestamp.now();
+          const generatedPostIsoStr = nowTimestamp.toDate().toISOString();
+          
+          const targetDocRef = editingPostId 
+            ? doc(db, "newsPosts", editingPostId) 
+            : doc(collection(db, "newsPosts"));
+
+          const payload = {
+            id: targetDocRef.id,
+            title,
+            slug: createSlug(title),
+            status: elements.status.value,
+            content: sanitizedContent,
+            summary: elements.summary.value.trim(),
+            postType,
+            videoUrl: postType === "video" ? elements.videoUrl.value.trim() : null,
+            tags: elements.tags.value.split(",").map(t => t.trim().toLowerCase()).filter(Boolean),
+            minutesRead: parseInt(elements.minutesRead.value) || 1,
+            category,
+            authorId,
+            imageUrl: formatDropboxUrl(elements.imageUrl.value),
+            isFeatured: elements.isFeatured.checked,
+            seo: {
+              focusKeyword: elements.focusKeyword.value.trim(),
+              metaTitle: elements.metaTitle.value.trim() || title,
+              metaDescription: elements.metaDescription.value.trim() || elements.summary.value.trim()
+            },
+            updatedAt: nowTimestamp,
+            createdAt: editingPostId ? undefined : nowTimestamp,
+            featuredAt: elements.isFeatured.checked ? nowTimestamp : null,
+            timestamp: generatedPostIsoStr,
+            views: editingPostId ? undefined : 0
+          };
+
+          // Clean undefined variables
+          Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+
+          await setDoc(targetDocRef, payload, { merge: true });
+
+          showNotification(editingPostId ? "Article updated successfully!" : "Article published successfully!");
+          
+          elements.form.reset();
+          quill.setText('');
+          clearDraft();
+          editingPostId = null;
+          elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-nib me-2"></i>Create New Post`;
+          elements.btnSubmitText.textContent = "Publish Article";
+          elements.videoUrlGroup.style.display = "none";
+          elements.imageStatus.innerHTML = "";
+          syncRenderPreview();
+
+        } catch (err) {
+          console.error("Firestore Save Error:", err);
+          showNotification("Failed to save post to database.", "error");
+        } finally {
+          isSubmitting = false;
+        }
+      });
+
+      // BOOTSTRAP INITIALIZATION
+      async function bootstrapWorkspace() {
+        await loadFormSelectors();
+        await checkForEditMode();
+        syncRenderPreview();
+      }
+
+      bootstrapWorkspace();
+    </script>
+</body>
+</html>
