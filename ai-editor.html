@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boon News - AI Editorial Portal</title>
+  <!-- Marked.js for HTML Preview Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --accent-blue: #2563eb;
+      --accent-hover: #1d4ed8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --header-height: 65px;
+      --sidebar-width: 280px;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* HEADER STYLES */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-height);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .sidebar-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      gap: 6px;
+      width: auto;
+      margin: 0;
+    }
+
+    .sidebar-toggle-btn:hover {
+      background: var(--card-bg);
+    }
+
+    /* MAIN LAYOUT WRAPPER */
+    .app-wrapper {
+      display: flex;
+      min-height: calc(100vh - var(--header-height));
+      position: relative;
+      width: 100%;
+    }
+
+    /* SIDEBAR NAVIGATION (HISTORY) */
+    .sidebar-nav {
+      width: var(--sidebar-width);
+      background: #0b1120;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+      z-index: 90;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-header h3 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .history-container {
+      padding: 16px;
+      overflow-y: auto;
+      flex-grow: 1;
+      max-height: calc(100vh - var(--header-height) - 65px);
+    }
+
+    .history-item {
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--card-bg);
+      margin-bottom: 10px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+
+    .history-item:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-1px);
+    }
+
+    .history-title { 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      color: #f1f5f9; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
+    
+    .history-time { 
+      font-size: 0.75rem; 
+      color: var(--text-muted); 
+      margin-top: 4px;
+    }
+
+    /* MAIN CONTENT AREA */
+    .main-content {
+      flex-grow: 1;
+      padding: 24px;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      min-width: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    h2, h3 { font-weight: 600; color: #fff; }
+    .card-header h2 { margin-bottom: 0; font-size: 1.25rem; }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 14px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #090d16;
+      color: var(--text-main);
+      font-size: 0.95rem;
+    }
+
+    textarea { resize: vertical; }
+
+    input:focus, textarea:focus {
+      outline: 2px solid var(--accent-blue);
+      border-color: transparent;
+    }
+
+    button {
+      background: var(--accent-blue);
+      color: white;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s ease;
+    }
+
+    button:hover { background: var(--accent-hover); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Key Control Actions */
+    .key-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-key-action {
+      margin-top: 0;
+      padding: 8px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-key-action:hover {
+      background: var(--border-color);
+    }
+
+    /* Top Action Copy Button */
+    .btn-copy {
+      width: auto;
+      margin-top: 0;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 6px;
+    }
+
+    .btn-copy:hover {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: var(--accent-blue);
+    }
+
+    .btn-copy svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    /* SEO Metadata Box */
+    .seo-panel {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .seo-field { margin-bottom: 10px; font-size: 0.9rem; }
+    .seo-field:last-child { margin-bottom: 0; }
+    .seo-field strong { color: var(--accent-blue); }
+    .seo-val { color: #e2e8f0; word-break: break-word; }
+
+    /* Preview Window */
+    .preview-body {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      min-height: 450px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      overflow-x: auto;
+    }
+
+    .preview-body h2 { color: #38bdf8; margin-top: 24px; font-size: 1.4rem; }
+    .preview-body h3 { color: #7dd3fc; margin-top: 18px; font-size: 1.15rem; }
+    .preview-body p { margin-bottom: 16px; }
+    .preview-body ul, .preview-body ol { margin-left: 20px; margin-bottom: 16px; }
+
+    /* Overlay for Mobile Overlay Backdrop */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 80;
+    }
+
+    /* RESPONSIVE BREAKPOINTS & MOBILE OPTIMIZATIONS */
+    @media (max-width: 1024px) {
+      .container { 
+        grid-template-columns: 1fr; 
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 16px;
+      }
+
+      .sidebar-nav {
+        position: fixed;
+        top: var(--header-height);
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        box-shadow: 10px 0 25px rgba(0, 0, 0, 0.5);
+      }
+
+      .sidebar-nav.active {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .preview-body {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="header-logo">B</div>
+      <div class="header-title">Boon News Desk</div>
+    </div>
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+      <span>History</span>
+    </button>
+  </header>
+
+  <!-- OVERLAY FOR MOBILE SIDEBAR -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- MAIN WRAPPER -->
+  <div class="app-wrapper">
+
+    <!-- SIDEBAR NAV (HISTORY) -->
+    <aside class="sidebar-nav" id="sidebarNav">
+      <div class="sidebar-header">
+        <h3>Draft History</h3>
+      </div>
+      <div class="history-container">
+        <div id="historyList"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN EDITORIAL CONTENT -->
+    <main class="main-content">
+      <div class="container">
+        
+        <!-- LEFT PANEL: CONTROLS -->
+        <div class="card">
+          <h2>Article Creator</h2>
+
+          <!-- BYOK GEMINI API KEY INPUT -->
+          <label for="apiKey">Gemini API Key (BYOK)</label>
+          <input id="apiKey" type="password" placeholder="AIzaSy..." autocomplete="off" />
+          <div class="key-actions">
+            <button class="btn-key-action" onclick="saveApiKey()">Save Key</button>
+            <button class="btn-key-action" onclick="clearApiKey()">Clear Key</button>
+          </div>
+          
+          <label for="topic">Topic / Raw Notes / Facts</label>
+          <textarea id="topic" rows="6" placeholder="Enter headline idea, breaking details, or press release notes..."></textarea>
+          
+          <label for="keywords">Focus Keywords (Comma Separated)</label>
+          <input id="keywords" type="text" placeholder="e.g., Nigeria Economy, CBN, Forex" />
+          
+          <button id="generateBtn" onclick="handleGeneration()">Generate Article</button>
+        </div>
+
+        <!-- RIGHT PANEL: PUBLICATION DRAFT & SEO -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Publication Preview</h2>
+            <button id="copyBtn" class="btn-copy" onclick="handleCopyContent()" title="Copy Plain Text Content">
+              <svg viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+              <span id="copyBtnText">Copy Clean Text</span>
+            </button>
+          </div>
+          
+          <div class="seo-panel">
+            <div class="seo-field"><strong>SEO Title:</strong> <span id="metaTitle" class="seo-val">-</span></div>
+            <div class="seo-field"><strong>Meta Description:</strong> <span id="metaDesc" class="seo-val">-</span></div>
+            <div class="seo-field"><strong>URL Slug:</strong> <span id="metaSlug" class="seo-val">-</span></div>
+          </div>
+
+          <div id="editorPreview" class="preview-body">
+            <p style="color: var(--text-muted);">Your formatted news report will render here after generation...</p>
+          </div>
+
+          <button id="saveCloudBtn" class="btn-secondary" style="display:none;" onclick="handleCloudSave()">Sync Draft to Firestore</button>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JS IMPORT MAP FOR SDKs -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.run/@google/genai",
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { GoogleGenAI, Type } from "@google/genai";
+    import { initializeApp } from "firebase/app";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+    // ==========================================
+    // 1. CONFIGURATION (Firebase Sync Options)
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyB29rQJnjLDlcl2m5rUBp30drxieLYQAxc",
+        authDomain: "growth-refinery.firebaseapp.com",
+        databaseURL: "https://growth-refinery-default-rtdb.firebaseio.com",
+        projectId: "growth-refinery",
+        storageBucket: "growth-refinery.firebasestorage.app",
+        messagingSenderId: "57791606499",
+        appId: "1:57791606499:web:ea8fd295189bab610d9fd6"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let currentArticleData = null;
+
+    // Side Navigation Toggle Functionality
+    window.toggleSidebar = function() {
+      const sidebar = document.getElementById("sidebarNav");
+      const overlay = document.getElementById("sidebarOverlay");
+      sidebar.classList.toggle("active");
+      overlay.classList.toggle("active");
+    };
+
+    // ==========================================
+    // BYOK API KEY STORAGE HANDLERS
+    // ==========================================
+    function getStoredApiKey() {
+      return localStorage.getItem("gemini_api_key") || "";
+    }
+
+    window.saveApiKey = function() {
+      const keyInput = document.getElementById("apiKey").value.trim();
+      if (!keyInput) {
+        alert("Please enter a valid Gemini API key.");
+        return;
+      }
+      localStorage.setItem("gemini_api_key", keyInput);
+      alert("Gemini API Key saved locally!");
+    };
+
+    window.clearApiKey = function() {
+      localStorage.removeItem("gemini_api_key");
+      document.getElementById("apiKey").value = "";
+      alert("Gemini API Key removed from browser storage.");
+    };
+
+    // Auto-load stored key into input field on page load
+    const savedKey = getStoredApiKey();
+    if (savedKey) {
+      document.getElementById("apiKey").value = savedKey;
+    }
+
+    // ==========================================
+    // 2. SYSTEM INSTRUCTIONS
+    // ==========================================
+    const SYSTEM_INSTRUCTIONS = `
+ROLE & IDENTITY:
+You are an expert Nigerian digital news editor and SEO strategist for "Boon News". You write publication-ready articles optimized for search engine ranking (Google Discover/Search) and reader engagement.
+
+WRITING & EDITORIAL RULES:
+1. Tone & Style: Write in an objective, professional, and engaging journalistic tone.
+2. Structure & Formatting:
+   - Start immediately with a strong 2-sentence hook (What happened & why it matters).
+   - Use clear, scannable subheadings (## H2 for main points, ### H3 for subpoints).
+   - Use inline bolding for key entities, figures, and dates.
+   - Keep paragraphs short (2-3 sentences max) for mobile readability.
+3. Content Focus: Adapt naturally to West African / Nigerian reader context (e.g., using relevant regional terminology, policy names, or regional impact where applicable).
+4. Strict Exclusions:
+   - DO NOT write intro meta-commentary like "Here is your article:" or "Sure, here is a breakdown:".
+   - DO NOT include conversational fluff at the end.
+
+SEO REQUIREMENTS:
+1. SEO Title: 50-60 characters, front-loaded with the primary keyword, highly clickable.
+2. Meta Description: 150-160 characters, compelling summary with a clear call-to-read.
+3. Slug: Clean, hyphenated, lowercase URL slug containing the main keyword.
+4. Keyword Density: Integrate target keywords naturally (1-2% density) without keyword stuffing.
+
+OUTPUT FORMAT:
+You MUST respond with valid JSON strictly matching the provided schema. No markdown wrapping (\`\`\`json) around the raw response payload.
+`;
+
+    // ==========================================
+    // 3. MARKDOWN STRIPPER / PARSER
+    // ==========================================
+    function stripMarkdown(md) {
+      if (!md) return "";
+      return md
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/(\*\*|__)(.*?)\1/g, '$2')
+        .replace(/(\*|_)(.*?)\1/g, '$2')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/^\s*>\s+/gm, '')
+        .replace(/^\s*[\*\-\+]\s+/gm, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    // ==========================================
+    // 4. GENERATION HANDLER (BYOK Model)
+    // ==========================================
+    window.handleGeneration = async function() {
+      const apiKeyInput = document.getElementById("apiKey").value.trim();
+      const topic = document.getElementById("topic").value.trim();
+      const keywords = document.getElementById("keywords").value.trim();
+      const btn = document.getElementById("generateBtn");
+
+      if (!apiKeyInput) {
+        alert("Please enter your Gemini API Key first.");
+        return;
+      }
+
+      if (!topic) {
+        alert("Please enter a topic or raw news notes.");
+        return;
+      }
+
+      // Automatically store the key for future visits
+      localStorage.setItem("gemini_api_key", apiKeyInput);
+
+      btn.disabled = true;
+      btn.innerText = "Generating News Draft...";
+
+      try {
+        // Dynamic client instantiation with user-provided key
+        const ai = new GoogleGenAI({ apiKey: apiKeyInput });
+
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: `Generate a news report based on the following input:\nTopic/Notes: ${topic}\nFocus Keywords: ${keywords}`,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTIONS,
+            temperature: 0.5,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                seo_title: { type: Type.STRING },
+                meta_description: { type: Type.STRING },
+                slug: { type: Type.STRING },
+                content_markdown: { type: Type.STRING }
+              },
+              required: ["seo_title", "meta_description", "slug", "content_markdown"]
+            }
+          }
+        });
+
+        currentArticleData = JSON.parse(response.text);
+
+        // Update UI
+        document.getElementById("metaTitle").innerText = currentArticleData.seo_title;
+        document.getElementById("metaDesc").innerText = currentArticleData.meta_description;
+        document.getElementById("metaSlug").innerText = currentArticleData.slug;
+        document.getElementById("editorPreview").innerHTML = marked.parse(currentArticleData.content_markdown);
+
+        // Save locally & enable cloud sync button
+        saveToLocalStorage(currentArticleData);
+        document.getElementById("saveCloudBtn").style.display = "block";
+
+      } catch (error) {
+        console.error("Generation Error:", error);
+        alert("Failed to generate article. Verify your API key or check the developer console for details.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Generate Article";
+      }
+    };
+
+    // ==========================================
+    // 5. COPY CLEAN TEXT TO CLIPBOARD
+    // ==========================================
+    window.handleCopyContent = async function() {
+      if (!currentArticleData || !currentArticleData.content_markdown) {
+        alert("No article content available to copy.");
+        return;
+      }
+
+      const cleanText = stripMarkdown(currentArticleData.content_markdown);
+
+      try {
+        await navigator.clipboard.writeText(cleanText);
+        const btnText = document.getElementById("copyBtnText");
+        btnText.innerText = "Copied Clean Text!";
+        setTimeout(() => {
+          btnText.innerText = "Copy Clean Text";
+        }, 2000);
+      } catch (err) {
+        console.error("Clipboard Copy Error:", err);
+        alert("Failed to copy content to clipboard.");
+      }
+    };
+
+    // ==========================================
+    // 6. LOCALSTORAGE & HISTORY MANAGEMENT
+    // ==========================================
+    function saveToLocalStorage(article) {
+      const history = JSON.parse(localStorage.getItem("boon_news_drafts") || "[]");
+      history.unshift({ ...article, timestamp: new Date().toISOString() });
+      
+      localStorage.setItem("boon_news_drafts", JSON.stringify(history.slice(0, 15)));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("boon_news_drafts") || "[]");
+      const container = document.getElementById("historyList");
+      
+      if (history.length === 0) {
+        container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); padding:10px 0;">No saved local drafts.</p>`;
+        return;
+      }
+
+      container.innerHTML = history.map((item, index) => `
+        <div class="history-item" onclick="loadDraft(${index})">
+          <div class="history-title">${item.seo_title || "Untitled Draft"}</div>
+          <div class="history-time">${new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+      `).join("");
+    }
+
+    window.loadDraft = function(index) {
+      const history = JSON.parse(localStorage.getItem("boon_news_drafts") || "[]");
+      const draft = history[index];
+      if (!draft) return;
+
+      currentArticleData = draft;
+      document.getElementById("metaTitle").innerText = draft.seo_title;
+      document.getElementById("metaDesc").innerText = draft.meta_description;
+      document.getElementById("metaSlug").innerText = draft.slug;
+      document.getElementById("editorPreview").innerHTML = marked.parse(draft.content_markdown);
+      document.getElementById("saveCloudBtn").style.display = "block";
+
+      // Auto close sidebar on mobile screen selection
+      if (window.innerWidth <= 768) {
+        toggleSidebar();
+      }
+    };
+
+    // ==========================================
+    // 7. FIRESTORE CLOUD SYNC
+    // ==========================================
+    window.handleCloudSave = async function() {
+      if (!currentArticleData) return;
+      
+      const cloudBtn = document.getElementById("saveCloudBtn");
+      cloudBtn.innerText = "Syncing...";
+      cloudBtn.disabled = true;
+
+      try {
+        await addDoc(collection(db, "published_articles"), {
+          ...currentArticleData,
+          createdAt: serverTimestamp()
+        });
+        alert("Draft successfully synced to Firestore!");
+      } catch (err) {
+        console.error("Firestore Error:", err);
+        alert("Failed to sync draft to Firestore. Verify Firebase keys.");
+      } finally {
+        cloudBtn.innerText = "Sync Draft to Firestore";
+        cloudBtn.disabled = false;
+      }
+    };
+
+    // Initial history load on page boot
+    renderHistory();
+  </script>
+</body>
+</html>
