@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/generate-news",
+      "destination": "/api/generate-news.js"
+    }
+  ]
+}
