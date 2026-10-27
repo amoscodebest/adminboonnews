@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boon News - Firestore History Archive</title>
+    <!-- Google Fonts for Tech/HUD Aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for HUD Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- DOMPurify for HTML Sanitization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <style>
+        :root {
+            /* Light Theme HUD Palette */
+            --bg-deep: #f0f3f8;
+            --bg-panel: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --neon-cyan: #008b99;
+            --neon-pink: #d8004c;
+            --neon-yellow: #a87900;
+            --neon-green: #008a3c;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --border-glow: rgba(0, 139, 153, 0.35);
+            --panel-border: #cbd5e1;
+            --header-height: 65px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle Light Mode Grid Overlay */
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(to right, rgba(0, 139, 153, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 139, 153, 0.08) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        /* Mobile Header Bar */
+        .mobile-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 14px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: var(--header-height);
+        }
+
+        .menu-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 8px 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 139, 153, 0.15);
+        }
+
+        /* Backdrop Overlay for Mobile Drawer */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Layout Architecture */
+        .app-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--panel-border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1002;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.03);
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .brand-box {
+            margin-bottom: 30px;
+            padding-left: 10px;
+        }
+
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+        }
+
+        .nav-item a:hover, .nav-item.active a {
+            background: rgba(0, 139, 153, 0.08);
+            color: var(--neon-cyan);
+            border-left-color: var(--neon-cyan);
+            box-shadow: inset 6px 0 12px -6px rgba(0, 139, 153, 0.2);
+        }
+
+        .nav-item.logout a {
+            color: var(--neon-pink);
+        }
+        .nav-item.logout a:hover {
+            background: rgba(216, 0, 76, 0.08);
+            border-left-color: var(--neon-pink);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .system-status-widget {
+            background: #f8fafc;
+            border: 1px dashed var(--panel-border);
+            padding: 12px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--neon-green);
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        /* Sidebar History specific list overrides */
+        .history-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            max-height: calc(100vh - 220px);
+            padding-right: 4px;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-radius: 6px;
+            background: #f8fafc;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid var(--panel-border);
+            border-left: 3px solid var(--panel-border);
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover, .history-item.active {
+            border-color: var(--neon-cyan);
+            border-left-color: var(--neon-cyan);
+            background: rgba(0, 139, 153, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .history-title { 
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            color: #0f172a; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        
+        .history-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        .history-category {
+            background: rgba(0, 139, 153, 0.1);
+            color: var(--neon-cyan);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Main Workspace Container */
+        main {
+            padding: 30px;
+            overflow-y: auto;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Top Header & Actions */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--panel-border);
+            padding-bottom: 20px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .view-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .view-title p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .cyber-btn {
+            background: #ffffff;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 10px 18px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .cyber-btn:hover {
+            background: var(--neon-cyan);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(0, 139, 153, 0.3);
+        }
+
+        .cyber-btn.pink {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        .cyber-btn.pink:hover {
+            background: var(--neon-pink);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(216, 0, 76, 0.3);
+        }
+
+        .cyber-btn.green {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .cyber-btn.green:hover {
+            background: var(--neon-green);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(0, 138, 60, 0.3);
+        }
+
+        /* Panel Containers */
+        .cyber-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--panel-border);
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .cyber-panel::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 100%; height: 10px;
+            border-top: 2px solid var(--neon-cyan);
+            border-right: 2px solid var(--neon-cyan);
+            pointer-events: none;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .panel-title span {
+            color: var(--neon-cyan);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* Metadata Panel */
+        .seo-panel {
+            background: #f8fafc;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .seo-field { font-size: 0.85rem; }
+        .seo-field strong { color: var(--neon-cyan); display: block; margin-bottom: 4px; font-weight: bold; }
+        .seo-val { color: #334155; word-break: break-word; font-weight: 600; }
+
+        /* Preview Window */
+        .preview-body {
+            background: #f8fafc;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 24px;
+            min-height: 450px;
+            line-height: 1.7;
+            color: #334155;
+            overflow-x: auto;
+        }
+
+        .preview-body h1 { color: #0f172a; font-size: 1.6rem; margin-bottom: 14px; font-family: 'Orbitron', sans-serif; }
+        .preview-body h2 { color: var(--neon-cyan); margin-top: 24px; margin-bottom: 10px; font-size: 1.3rem; }
+        .preview-body h3 { color: #006670; margin-top: 18px; margin-bottom: 8px; font-size: 1.1rem; }
+        .preview-body p { margin-bottom: 16px; }
+        .preview-body ul, .preview-body ol { margin-left: 20px; margin-bottom: 16px; }
+        .preview-body blockquote { border-left: 3px solid var(--neon-cyan); padding-left: 12px; color: var(--text-dim); margin-bottom: 16px; }
+
+        /* System Telemetry Ticker */
+        .sys-ticker {
+            margin-top: 25px;
+            background: #ffffff;
+            border: 1px solid var(--panel-border);
+            padding: 10px 14px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .sys-ticker span { color: var(--neon-cyan); font-weight: bold; }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+            }
+
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            aside {
+                position: fixed;
+                top: 0; left: 0;
+                height: 100vh;
+                width: 280px;
+                transform: translateX(-100%);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+                z-index: 1002;
+            }
+
+            aside.open {
+                transform: translateX(0);
+            }
+
+            main {
+                padding: 16px;
+                max-width: 100%;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+            }
+
+            .view-title h1 {
+                font-size: 1.3rem;
+            }
+
+            .action-group {
+                width: 100%;
+            }
+
+            .action-group .cyber-btn {
+                flex: 1;
+                padding: 12px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .preview-body {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .action-group {
+                flex-direction: column;
+            }
+
+            .action-group .cyber-btn {
+                width: 100%;
+            }
+
+            .sys-ticker {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- Mobile Navigation Top Bar -->
+    <header class="mobile-header">
+        <div class="brand-title">BoonNews_CMS</div>
+        <button class="menu-toggle-btn" id="menuToggleBtn" aria-label="Toggle Navigation">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- Overlay Backdrop for Drawer -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation Drawer / History Archive List -->
+        <aside id="sideNav">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-title">BoonNews_CMS</div>
+                    <div class="brand-subtitle">FIRESTORE ARCHIVE</div>
+                </div>
+                
+                <div style="margin-bottom: 12px; font-size: 0.8rem; font-weight: bold; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">
+                    Assistant_drafts
+                </div>
+
+                <div class="history-container">
+                    <div id="historyList">
+                        <p style="font-size:0.8rem; color:var(--text-dim); padding:10px 0;">Loading Firestore records...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="system-status-widget">
+                <div><span class="status-dot"></span> FIRESTORE: LIVE</div>
+                <div style="margin-top: 4px;">COLLECTION: Assistant drafts Lists</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area (Full Details View) -->
+        <main>
+            <div class="top-bar">
+                <div class="view-title">
+                    <h1>Article Full Preview</h1>
+                    <p>Select a document from the archive history stream</p>
+                </div>
+                <div class="action-group">
+                    <button id="pushEditorBtn" class="cyber-btn green" style="display:none;" onclick="handleOpenInEditor()" title="Send draft directly to CMS Editor page">
+                        <i class="fa-solid fa-pen-to-square"></i> Send to Editor
+                    </button>
+                    
+                    <button id="copyBtn" class="cyber-btn" style="display:none;" onclick="handleCopyContent()" title="Copy Plain Text Content">
+                        <i class="fa-solid fa-copy"></i> <span id="copyBtnText">Copy Clean Text</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Card Panel -->
+            <div class="cyber-panel">
+                <!-- Article Metadata Panel -->
+                <div class="seo-panel" id="seoPanel" style="display:none;">
+                    <div class="seo-field"><strong>SEO Title:</strong> <span id="metaTitle" class="seo-val">-</span></div>
+                    <div class="seo-field"><strong>Category / Type:</strong> <span id="metaCategory" class="seo-val">-</span></div>
+                    <div class="seo-field"><strong>Focus Keyword:</strong> <span id="metaKeyword" class="seo-val">-</span></div>
+                    <div class="seo-field"><strong>Read Time:</strong> <span id="metaReadTime" class="seo-val">-</span></div>
+                    <div class="seo-field" style="grid-column: 1 / -1;"><strong>Excerpt Summary:</strong> <span id="metaSummary" class="seo-val">-</span></div>
+                    <div class="seo-field" style="grid-column: 1 / -1;"><strong>Meta Description:</strong> <span id="metaDesc" class="seo-val">-</span></div>
+                    <div class="seo-field" style="grid-column: 1 / -1;"><strong>Tags:</strong> <span id="metaTags" class="seo-val">-</span></div>
+                    <div class="seo-field" style="grid-column: 1 / -1;"><strong>URL Slug:</strong> <span id="metaSlug" class="seo-val">-</span></div>
+                </div>
+
+                <!-- HTML Rendered Article Body Preview -->
+                <div id="editorPreview" class="preview-body">
+                    <p style="color: var(--text-dim); text-align: center; padding-top: 150px;">Select a document from the history list on the left sidebar to view full details...</p>
+                </div>
+            </div>
+
+            <!-- System Telemetry Ticker -->
+            <div class="sys-ticker">
+                <div>TIME: <span id="clock">00:00:00 WAT</span></div>
+                <div>ARCHIVE TARGET: <span>Assistant drafts Lists</span></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDK Imports & Logic Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            orderBy, 
+            limit, 
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+        // ==========================================
+        // 1. CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB29rQJnjLDlcl2m5rUBp30drxieLYQAxc",
+            authDomain: "growth-refinery.firebaseapp.com",
+            databaseURL: "https://growth-refinery-default-rtdb.firebaseio.com",
+            projectId: "growth-refinery",
+            storageBucket: "growth-refinery.firebasestorage.app",
+            messagingSenderId: "57791606499",
+            appId: "1:57791606499:web:ea8fd295189bab610d9fd6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // TARGET COLLECTION
+        const COLLECTION_NAME = "news_ai_drafts";
+
+        let selectedArticleData = null;
+        let firestorePostsCache = [];
+
+        // Mobile Sidebar Toggle Control
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sideNav = document.getElementById('sideNav');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        window.toggleDrawer = function() {
+            sideNav.classList.toggle('open');
+            drawerOverlay.classList.toggle('active');
+        }
+
+        menuToggleBtn.addEventListener('click', toggleDrawer);
+        drawerOverlay.addEventListener('click', toggleDrawer);
+
+        // ==========================================
+        // 2. FIRESTORE REAL-TIME HISTORY LISTENER
+        // ==========================================
+        function listenToFirestoreHistory() {
+            const container = document.getElementById("historyList");
+            
+            try {
+                const q = query(
+                    collection(db, COLLECTION_NAME), 
+                    orderBy("createdAt", "desc"), 
+                    limit(50)
+                );
+
+                onSnapshot(q, (snapshot) => {
+                    firestorePostsCache = [];
+                    if (snapshot.empty) {
+                        container.innerHTML = `<p style="font-size:0.8rem; color:var(--text-dim); padding:10px 0;">No records found in '${COLLECTION_NAME}'.</p>`;
+                        return;
+                    }
+
+                    snapshot.forEach((doc) => {
+                        firestorePostsCache.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    renderFirestoreHistoryUI();
+                }, (err) => {
+                    console.error("Firestore Listen Error:", err);
+                    container.innerHTML = `<p style="font-size:0.8rem; color:var(--neon-pink); padding:10px 0;">Failed to load documents.</p>`;
+                });
+
+            } catch (err) {
+                console.error("Query Init Error:", err);
+                container.innerHTML = `<p style="font-size:0.8rem; color:var(--neon-pink); padding:10px 0;">Connection error.</p>`;
+            }
+        }
+
+        function renderFirestoreHistoryUI() {
+            const container = document.getElementById("historyList");
+            
+            container.innerHTML = firestorePostsCache.map((item, index) => {
+                let timeStr = "Recent";
+                if (item.createdAt && item.createdAt.toDate) {
+                    timeStr = item.createdAt.toDate().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } else if (item.savedAt) {
+                    timeStr = item.savedAt;
+                }
+
+                return `
+                    <div class="history-item" id="history-item-${index}" onclick="loadFirestoreDraft(${index})">
+                        <div class="history-title">${item.title || item.metaTitle || "Untitled Document"}</div>
+                        <div class="history-meta-row">
+                            <span class="history-category">${item.category || "General"}</span>
+                            <span>${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // ==========================================
+        // 3. LOAD & DISPLAY FULL DETAILS
+        // ==========================================
+        window.loadFirestoreDraft = function(index) {
+            const draft = firestorePostsCache[index];
+            if (!draft) return;
+
+            selectedArticleData = draft;
+
+            // Highlight active list item
+            document.querySelectorAll(".history-item").forEach(el => el.classList.remove("active"));
+            const activeEl = document.getElementById(`history-item-${index}`);
+            if (activeEl) activeEl.classList.add("active");
+
+            // Sanitize HTML body content
+            const htmlBody = draft.content_html || draft.contentHtml || "";
+            const safeHtml = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(htmlBody) : htmlBody;
+
+            // Populate Metadata Panel
+            document.getElementById("metaTitle").innerText = draft.metaTitle || draft.title || "-";
+            document.getElementById("metaCategory").innerText = `${draft.category || 'General'} (${draft.postType || 'standard'})`;
+            document.getElementById("metaKeyword").innerText = draft.focusKeyword || "-";
+            document.getElementById("metaReadTime").innerText = `${draft.estimatedReadTime || draft.minutesRead || 2} min read`;
+            document.getElementById("metaSummary").innerText = draft.summary || "-";
+            document.getElementById("metaDesc").innerText = draft.metaDescription || "-";
+            document.getElementById("metaTags").innerText = Array.isArray(draft.tags) ? draft.tags.join(", ") : (draft.tags || "-");
+            document.getElementById("metaSlug").innerText = draft.slug || "-";
+            
+            // Render Preview Window
+            document.getElementById("editorPreview").innerHTML = `<h1>${draft.title || "Untitled Article"}</h1>${safeHtml}`;
+
+            // Show Action Buttons & Metadata Panel
+            document.getElementById("seoPanel").style.display = "grid";
+            document.getElementById("pushEditorBtn").style.display = "inline-flex";
+            document.getElementById("copyBtn").style.display = "inline-flex";
+
+            // Auto close sidebar on mobile after selection
+            if (window.innerWidth <= 768) {
+                toggleDrawer();
+            }
+        };
+
+        // ==========================================
+        // 4. PUSH DIRECTLY TO CMS EDITOR PAGE
+        // ==========================================
+        window.handleOpenInEditor = function() {
+            if (!selectedArticleData) return;
+
+            const cmsDraft = {
+                title: selectedArticleData.title || "",
+                postType: selectedArticleData.postType || "standard",
+                status: "published",
+                contentHtml: selectedArticleData.content_html || selectedArticleData.contentHtml || "",
+                summary: selectedArticleData.summary || "",
+                tags: Array.isArray(selectedArticleData.tags) ? selectedArticleData.tags.join(", ") : selectedArticleData.tags || "",
+                minutesRead: selectedArticleData.estimatedReadTime || selectedArticleData.minutesRead || 2,
+                category: selectedArticleData.category || "",
+                focusKeyword: selectedArticleData.focusKeyword || "",
+                metaTitle: selectedArticleData.metaTitle || "",
+                metaDescription: selectedArticleData.metaDescription || "",
+                savedAt: new Date().toLocaleTimeString()
+            };
+
+            localStorage.setItem("admin_add_post_draft", JSON.stringify(cmsDraft));
+            window.location.href = "editor.html";
+        };
+
+        // ==========================================
+        // 5. COPY CLEAN TEXT
+        // ==========================================
+        window.handleCopyContent = async function() {
+            if (!selectedArticleData) return;
+
+            const htmlBody = selectedArticleData.content_html || selectedArticleData.contentHtml || "";
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = htmlBody;
+            const plainText = `${selectedArticleData.title}\n\n${tempDiv.innerText || tempDiv.textContent}`;
+
+            try {
+                await navigator.clipboard.writeText(plainText);
+                const btnText = document.getElementById("copyBtnText");
+                btnText.innerText = "Copied Clean Text!";
+                setTimeout(() => { btnText.innerText = "Copy Clean Text"; }, 2000);
+            } catch (err) {
+                console.error("Clipboard Error:", err);
+                alert("Failed to copy content.");
+            }
+        };
+
+        // Live Clock Generator
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0] + ' WAT';
+            const clockEl = document.getElementById('clock');
+            if (clockEl) clockEl.textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Initialize real-time history listener on startup
+        listenToFirestoreHistory();
+    </script>
+</body>
+</html>
