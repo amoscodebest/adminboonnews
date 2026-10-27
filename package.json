@@ -1,9 +1,0 @@
-{
-  "name": "boonnews-editorial-portal",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@google/genai": "^0.1.1"
-  }
-}
