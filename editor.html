@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER-CMS // Content Workspace (Light Edition)</title>
+    <title>BoonNews Admin Editor </title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
@@ -316,14 +316,29 @@
 
         .form-group { margin-bottom: 14px; min-width: 0; }
         .form-label {
-            display: block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 0.75rem;
             color: var(--tech-cyan);
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 6px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
+
+        /* Live SEO Length Counter Colors */
+        .char-counter {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .char-optimal { color: var(--tech-green); }
+        .char-warn { color: var(--tech-yellow); }
+        .char-over { color: var(--tech-pink); }
 
         .cyber-input, .cyber-select, .cyber-textarea {
             background: var(--input-bg);
@@ -347,6 +362,22 @@
             font-family: 'Orbitron', sans-serif;
             font-size: clamp(0.95rem, 2.5vw, 1.1rem);
             font-weight: 700;
+        }
+
+        /* Visual Tag Chips */
+        .tag-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .tag-chip {
+            background: rgba(2, 132, 199, 0.1);
+            border: 1px solid rgba(2, 132, 199, 0.35);
+            color: var(--tech-cyan);
+            font-size: 0.72rem;
+            font-weight: bold;
+            padding: 2px 8px;
         }
 
         .editor-wrapper { width: 100%; overflow: hidden; }
@@ -414,6 +445,35 @@
             background-color: var(--tech-pink);
         }
 
+        /* Preview Mode Switcher Tabs */
+        .preview-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            background: var(--input-bg);
+            padding: 4px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .preview-tab-btn {
+            flex: 1;
+            padding: 6px 8px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .preview-tab-btn.active {
+            background: var(--tech-cyan);
+            color: #ffffff;
+        }
+
+        /* Site Feed Preview Card */
         .preview-card {
             background: #ffffff;
             border: 1px solid var(--panel-border);
@@ -462,6 +522,86 @@
         .preview-title { font-size: 0.95rem; font-weight: bold; color: var(--text-main); margin-bottom: 6px; }
         .preview-summary { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; line-height: 1.3; }
         .preview-content { font-size: 0.8rem; color: var(--text-main); line-height: 1.4; border-top: 1px dashed var(--panel-border); padding-top: 8px; max-height: 150px; overflow-y: auto; }
+
+        /* WhatsApp / Facebook OpenGraph Share Preview Card */
+        .og-preview-card {
+            display: none;
+            background: #f8fafc;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .og-image {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+            background: #e2e8f0;
+            display: block;
+        }
+
+        .og-meta {
+            padding: 10px 12px;
+            background: #f1f5f9;
+            border-top: 1px solid var(--panel-border);
+        }
+
+        .og-domain {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        .og-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.25;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .og-desc {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Article Revision History */
+        .revision-list {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .revision-item {
+            background: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            padding: 8px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.78rem;
+        }
+
+        .revision-info strong { color: var(--text-main); display: block; }
+        .revision-info span { color: var(--text-dim); font-size: 0.7rem; }
 
         .sys-ticker {
             margin-top: 20px;
@@ -594,7 +734,10 @@
                         
                         <div class="cyber-panel">
                             <div class="form-group">
-                                <label class="form-label" for="title">Article Title/Headline</label>
+                                <label class="form-label" for="title">
+                                    <span>Article Title/Headline</span>
+                                    <span id="headlineCounter" class="char-counter">0 / 70 chars</span>
+                                </label>
                                 <input type="text" id="title" class="cyber-input headline-input" placeholder="Enter headline text here..." required>
                             </div>
 
@@ -625,14 +768,18 @@
                         <div class="cyber-panel">
                             <div class="panel-title">Article Overview & Metadata</div>
                             <div class="form-group">
-                                <label class="form-label" for="summary">Summary/Excerpt </label>
-                                <textarea id="summary" class="cyber-textarea" style="min-height: 70px;" placeholder="Brief article content article..."></textarea>
+                                <label class="form-label" for="summary">Summary/Excerpt</label>
+                                <textarea id="summary" class="cyber-textarea" style="min-height: 70px;" placeholder="Brief article excerpt..."></textarea>
                             </div>
 
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
                                 <div class="form-group">
-                                    <label class="form-label" for="tags">Tags (Comma-Separated)</label>
+                                    <label class="form-label" for="tags">
+                                        <span>Tags (Comma-Separated)</span>
+                                        <span id="tagCountBadge" class="char-counter">0 unique</span>
+                                    </label>
                                     <input type="text" id="tags" class="cyber-input" placeholder="politics, election, osun">
+                                    <div id="tagChipsPreview" class="tag-chips-container"></div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="minutesRead">Estimated Read Time (Mins)</label>
@@ -650,14 +797,29 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="metaTitle">SEO Meta Title</label>
+                                <label class="form-label" for="metaTitle">
+                                    <span>SEO Meta Title</span>
+                                    <span id="metaTitleCounter" class="char-counter">0 / 60 chars (Optimal: 50-60)</span>
+                                </label>
                                 <input type="text" id="metaTitle" class="cyber-input" placeholder="Overrides headline if specified...">
                             </div>
 
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="metaDescription">SEO Meta Description</label>
+                                <label class="form-label" for="metaDescription">
+                                    <span>SEO Meta Description</span>
+                                    <span id="metaDescCounter" class="char-counter">0 / 160 chars (Optimal: 150-160)</span>
+                                </label>
                                 <textarea id="metaDescription" class="cyber-textarea" style="min-height: 50px;" placeholder="Meta description for search engine result pages..."></textarea>
                             </div>
+                        </div>
+
+                        <!-- ARTICLE REVISION HISTORY PANEL (Visible in Edit Mode) -->
+                        <div class="cyber-panel" id="revisionPanel" style="display: none;">
+                            <div class="panel-title">
+                                <span>Article Revision History</span>
+                                <span id="revisionCount">0 SAVED VERSIONS</span>
+                            </div>
+                            <div class="revision-list" id="revisionList"></div>
                         </div>
 
                     </div>
@@ -665,18 +827,24 @@
                     <div class="sidebar-controls">
                         
                         <div class="cyber-panel">
-                            <div class="panel-title">Publishing Control</div>
+                            <div class="panel-title">Publishing & Scheduling</div>
                             <div class="form-group">
                                 <label class="form-label" for="status">Publication Status</label>
                                 <select id="status" class="cyber-select">
                                     <option value="published">PUBLISHED IMMEDIATELY</option>
+                                    <option value="scheduled">SCHEDULE FOR LATER</option>
                                     <option value="draft">Save As DRAFT</option>
                                 </select>
                             </div>
 
+                            <div class="form-group" id="scheduleDateGroup" style="display: none;">
+                                <label class="form-label" for="scheduledAt">Publish Date & Time</label>
+                                <input type="datetime-local" id="scheduledAt" class="cyber-input">
+                            </div>
+
                             <div class="form-group" style="margin-bottom: 0;">
                                 <div class="toggle-row">
-                                    <span class="form-label" style="margin: 0;">Set As Hero (Featured) </span>
+                                    <span class="form-label" style="margin: 0;">Set As Hero (Featured)</span>
                                     <label class="toggle-switch">
                                         <input type="checkbox" id="isFeatured">
                                         <span class="toggle-slider"></span>
@@ -717,8 +885,15 @@
                         </div>
 
                         <div class="cyber-panel">
-                            <div class="panel-title">Live Preview Card</div>
-                            <div class="preview-card">
+                            <div class="panel-title">Live Card & Social Preview</div>
+
+                            <div class="preview-tabs">
+                                <button type="button" class="preview-tab-btn active" id="tabSiteCard">Site Card</button>
+                                <button type="button" class="preview-tab-btn" id="tabSocialOg">WhatsApp / FB Card</button>
+                            </div>
+
+                            <!-- SITE FEED PREVIEW CARD -->
+                            <div class="preview-card" id="siteCardPreview">
                                 <div class="preview-image-wrapper">
                                     <img id="previewImage" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='400' viewBox='0 0 900 400'><rect width='100%' height='100%' fill='%23e2e8f0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='18'>Awaiting Dropbox Media Asset</text></svg>" alt="Preview Asset">
                                     <div id="videoIconOverlay" class="video-overlay-icon"><i class="fa-solid fa-play"></i></div>
@@ -732,6 +907,16 @@
                                     <div id="previewContent" class="preview-content">Body text preview...</div>
                                 </div>
                             </div>
+
+                            <!-- WHATSAPP / FACEBOOK OPENGRAPH SHARE PREVIEW CARD -->
+                            <div class="og-preview-card" id="socialOgPreview">
+                                <img id="ogPreviewImage" class="og-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='470' viewBox='0 0 900 470'><rect width='100%' height='100%' fill='%23cbd5e1'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23475569' font-size='20'>OpenGraph Share Image (1200x630)</text></svg>" alt="OG Preview">
+                                <div class="og-meta">
+                                    <div class="og-domain">boonnewsng.blog</div>
+                                    <div class="og-title" id="ogPreviewTitle">Headline Preview</div>
+                                    <div class="og-desc" id="ogPreviewDesc">Meta description or article summary snippet for WhatsApp and Facebook shares...</div>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -741,7 +926,8 @@
 
             <div class="sys-ticker">
                 <div>FIREBASE_AUTH: <span style="color:var(--tech-green)">ONLINE</span></div>
-                <div>SESSION: <span style="color:var(--tech-cyan)">ACTIVE</span></div>
+                <div>DROPBOX_CHOOSER: <span style="color:var(--tech-cyan)">ACTIVE</span></div>
+                <div>SCHEMA_ENGINE: <span style="color:var(--tech-cyan)">NEWSARTICLE_JSONLD</span></div>
             </div>
         </main>
     </div>
@@ -769,7 +955,7 @@
         getAuth, onAuthStateChanged, signOut 
       } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
       import { 
-        getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp 
+        getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, query, orderBy, limit, Timestamp 
       } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -791,7 +977,10 @@
       const FALLBACK_IMG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400"><rect width="100%" height="100%" fill="%23e2e8f0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2364748b" font-size="18">Awaiting Dropbox Media Asset</text></svg>`;
 
       let editingPostId = null;
+      let currentPostSnapshot = null;
       let isSubmitting = false;
+      let authorsMap = {};
+      let currentUserEmail = "Admin";
 
       // INITIALIZE QUILL RICH TEXT ENGINE
       const quill = new Quill('#editor', {
@@ -808,7 +997,7 @@
         }
       });
 
-      // PREVENT BASE64 PASTING (Storage Expiration Protection)
+      // PREVENT BASE64 PASTING
       quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
         delta.ops.forEach(op => {
           if (op.insert && typeof op.insert === 'object' && op.insert.image) {
@@ -824,19 +1013,26 @@
       const elements = {
         form: document.getElementById("newsForm"),
         title: document.getElementById("title"),
+        headlineCounter: document.getElementById("headlineCounter"),
         postType: document.getElementById("postType"),
         status: document.getElementById("status"),
+        scheduleDateGroup: document.getElementById("scheduleDateGroup"),
+        scheduledAt: document.getElementById("scheduledAt"),
         videoUrlGroup: document.getElementById("videoUrlGroup"),
         videoUrl: document.getElementById("videoUrl"),
         summary: document.getElementById("summary"),
         tags: document.getElementById("tags"),
+        tagCountBadge: document.getElementById("tagCountBadge"),
+        tagChipsPreview: document.getElementById("tagChipsPreview"),
         minutesRead: document.getElementById("minutesRead"),
         author: document.getElementById("author"),
         category: document.getElementById("category"),
         imageUrl: document.getElementById("imageUrl"),
         focusKeyword: document.getElementById("focusKeyword"),
         metaTitle: document.getElementById("metaTitle"),
+        metaTitleCounter: document.getElementById("metaTitleCounter"),
         metaDescription: document.getElementById("metaDescription"),
+        metaDescCounter: document.getElementById("metaDescCounter"),
         isFeatured: document.getElementById("isFeatured"),
         imageStatus: document.getElementById("imageStatus"),
         
@@ -848,8 +1044,20 @@
         pContent: document.getElementById("previewContent"),
         pImage: document.getElementById("previewImage"),
         pVideoOverlay: document.getElementById("videoIconOverlay"),
-        notification: document.getElementById("notification"),
 
+        tabSiteCard: document.getElementById("tabSiteCard"),
+        tabSocialOg: document.getElementById("tabSocialOg"),
+        siteCardPreview: document.getElementById("siteCardPreview"),
+        socialOgPreview: document.getElementById("socialOgPreview"),
+        ogPreviewImage: document.getElementById("ogPreviewImage"),
+        ogPreviewTitle: document.getElementById("ogPreviewTitle"),
+        ogPreviewDesc: document.getElementById("ogPreviewDesc"),
+
+        revisionPanel: document.getElementById("revisionPanel"),
+        revisionCount: document.getElementById("revisionCount"),
+        revisionList: document.getElementById("revisionList"),
+
+        notification: document.getElementById("notification"),
         btnDropboxPicker: document.getElementById("btnDropboxPicker"),
         draftAlert: document.getElementById("draftAlert"),
         btnRestoreDraft: document.getElementById("btnRestoreDraft"),
@@ -869,6 +1077,7 @@
           showNotification("Unauthorized access! Redirecting...", "error");
           setTimeout(() => { window.location.href = "login.html"; }, 1500);
         } else {
+          currentUserEmail = user.email;
           elements.userDisplay.textContent = `User: ${user.email}`;
         }
       });
@@ -924,6 +1133,49 @@
         });
       });
 
+      // 1. TAG DEDUPLICATION & VISUAL CHIPS
+      function parseUniqueTags(rawTagString) {
+        const cleaned = rawTagString
+          .split(",")
+          .map(t => t.trim().toLowerCase())
+          .filter(Boolean);
+        return [...new Set(cleaned)];
+      }
+
+      function updateTagFeedback() {
+        const uniqueTags = parseUniqueTags(elements.tags.value);
+        elements.tagCountBadge.textContent = `${uniqueTags.length} unique`;
+        elements.tagChipsPreview.innerHTML = uniqueTags
+          .map(tag => `<span class="tag-chip">#${tag}</span>`)
+          .join("");
+      }
+
+      // 2. LIVE SEO LENGTH COUNTERS
+      function updateSeoCounters() {
+        const titleLen = elements.title.value.trim().length;
+        elements.headlineCounter.textContent = `${titleLen} / 70 chars`;
+        elements.headlineCounter.className = `char-counter ${
+          titleLen > 70 ? 'char-over' :
+          titleLen >= 40 ? 'char-optimal' : ''
+        }`;
+
+        const metaTitleLen = elements.metaTitle.value.trim().length;
+        elements.metaTitleCounter.textContent = `${metaTitleLen} / 60 chars (Optimal: 50-60)`;
+        elements.metaTitleCounter.className = `char-counter ${
+          metaTitleLen === 0 ? '' :
+          metaTitleLen > 60 ? 'char-over' :
+          metaTitleLen >= 50 ? 'char-optimal' : 'char-warn'
+        }`;
+
+        const metaDescLen = elements.metaDescription.value.trim().length;
+        elements.metaDescCounter.textContent = `${metaDescLen} / 160 chars (Optimal: 150-160)`;
+        elements.metaDescCounter.className = `char-counter ${
+          metaDescLen === 0 ? '' :
+          metaDescLen > 160 ? 'char-over' :
+          metaDescLen >= 150 ? 'char-optimal' : 'char-warn'
+        }`;
+      }
+
       function autoCalculateReadTime() {
         const text = quill.getText().trim();
         if (!text) {
@@ -934,6 +1186,7 @@
         elements.minutesRead.value = Math.max(1, Math.ceil(wordCount / 200));
       }
 
+      // 3. SYNC LIVE SITE CARD & OPENGRAPH SOCIAL PREVIEW
       function syncRenderPreview() {
         const sectionLabels = {
           'standard': 'Standard Story',
@@ -941,8 +1194,12 @@
           'video': 'Video Feed'
         };
 
-        elements.pTitle.textContent = elements.title.value.trim() || "Article Title Preview";
-        elements.pSummary.textContent = elements.summary.value.trim() || "Excerpt description preview will render here...";
+        const activeTitle = elements.title.value.trim() || "Article Title Preview";
+        const activeSummary = elements.summary.value.trim() || "Excerpt description preview will render here...";
+        const cleanImgUrl = formatDropboxUrl(elements.imageUrl.value);
+
+        elements.pTitle.textContent = activeTitle;
+        elements.pSummary.textContent = activeSummary;
         elements.pCategory.textContent = elements.category.value || "Category";
         elements.pMinutes.textContent = elements.minutesRead.value || "0";
         
@@ -959,9 +1216,89 @@
         elements.pSection.textContent = contextRoute ? `Target: ${sectionLabels[contextRoute]}` : "Target: Standard";
         elements.pVideoOverlay.style.display = (contextRoute === "video") ? "flex" : "none";
 
-        const cleanImgUrl = formatDropboxUrl(elements.imageUrl.value);
         elements.pImage.src = cleanImgUrl || FALLBACK_IMG;
         elements.pImage.onerror = () => { elements.pImage.src = FALLBACK_IMG; };
+
+        // WhatsApp / Facebook OpenGraph Preview Card Sync
+        elements.ogPreviewTitle.textContent = elements.metaTitle.value.trim() || activeTitle;
+        elements.ogPreviewDesc.textContent = elements.metaDescription.value.trim() || activeSummary;
+        elements.ogPreviewImage.src = cleanImgUrl || FALLBACK_IMG;
+        elements.ogPreviewImage.onerror = () => { elements.ogPreviewImage.src = FALLBACK_IMG; };
+
+        updateSeoCounters();
+        updateTagFeedback();
+      }
+
+      // Preview Tab Switcher
+      elements.tabSiteCard.addEventListener("click", () => {
+        elements.tabSiteCard.classList.add("active");
+        elements.tabSocialOg.classList.remove("active");
+        elements.siteCardPreview.style.display = "block";
+        elements.socialOgPreview.style.display = "none";
+      });
+
+      elements.tabSocialOg.addEventListener("click", () => {
+        elements.tabSocialOg.classList.add("active");
+        elements.tabSiteCard.classList.remove("active");
+        elements.socialOgPreview.style.display = "block";
+        elements.siteCardPreview.style.display = "none";
+      });
+
+      // 4. SCHEDULED PUBLISHING TOGGLE
+      elements.status.addEventListener("change", () => {
+        if (elements.status.value === "scheduled") {
+          elements.scheduleDateGroup.style.display = "block";
+          elements.scheduledAt.setAttribute("required", "required");
+          elements.btnSubmitText.textContent = editingPostId ? "Update Schedule" : "Schedule Article";
+        } else {
+          elements.scheduleDateGroup.style.display = "none";
+          elements.scheduledAt.removeAttribute("required");
+          elements.btnSubmitText.textContent = editingPostId ? "Update Existing Post" : "Publish Article";
+        }
+        saveDraftToLocalStorage();
+      });
+
+      // 5. ARTICLE REVISION HISTORY LOADER & RESTORE
+      async function loadRevisions(postId) {
+        try {
+          const revQuery = query(collection(db, "newsPosts", postId, "revisions"), orderBy("savedAt", "desc"), limit(10));
+          const revSnap = await getDocs(revQuery);
+
+          elements.revisionPanel.style.display = "block";
+          elements.revisionCount.textContent = `${revSnap.size} SAVED VERSIONS`;
+
+          if (revSnap.empty) {
+            elements.revisionList.innerHTML = `<p style="font-size:0.75rem; color:var(--text-dim);">No prior revisions recorded for this article yet.</p>`;
+            return;
+          }
+
+          elements.revisionList.innerHTML = "";
+          revSnap.forEach(docSnap => {
+            const rev = docSnap.data();
+            const dateStr = rev.savedAt ? rev.savedAt.toDate().toLocaleString() : "Unknown date";
+            const item = document.createElement("div");
+            item.className = "revision-item";
+            item.innerHTML = `
+              <div class="revision-info">
+                <strong>${rev.title || "Untitled Revision"}</strong>
+                <span>Saved ${dateStr} by ${rev.editedBy || "Editor"}</span>
+              </div>
+              <button type="button" class="cyber-btn" style="padding:4px 8px; font-size:0.7rem;">Restore</button>
+            `;
+            item.querySelector("button").addEventListener("click", () => {
+              if (confirm("Restore this revision into the editor? Unsaved current edits will be replaced.")) {
+                elements.title.value = rev.title || "";
+                elements.summary.value = rev.summary || "";
+                if (rev.content) quill.clipboard.dangerouslyPasteHTML(rev.content);
+                syncRenderPreview();
+                showNotification("Revision loaded into workspace. Click Update to publish.", "info");
+              }
+            });
+            elements.revisionList.appendChild(item);
+          });
+        } catch (err) {
+          console.error("Error fetching revisions:", err);
+        }
       }
 
       function saveDraftToLocalStorage() {
@@ -970,6 +1307,7 @@
           title: elements.title.value,
           postType: elements.postType.value,
           status: elements.status.value,
+          scheduledAt: elements.scheduledAt.value,
           videoUrl: elements.videoUrl.value,
           contentHtml: quill.root.innerHTML,
           summary: elements.summary.value,
@@ -995,8 +1333,9 @@
 
         const data = JSON.parse(rawData);
         elements.title.value = data.title || "";
-        elements.postType.value = data.postType || "";
+        elements.postType.value = data.postType || "standard";
         elements.status.value = data.status || "published";
+        elements.scheduledAt.value = data.scheduledAt || "";
         elements.videoUrl.value = data.videoUrl || "";
         elements.summary.value = data.summary || "";
         elements.tags.value = data.tags || "";
@@ -1015,6 +1354,9 @@
           elements.videoUrlGroup.style.display = "block";
           elements.videoUrl.setAttribute("required", "required");
         }
+        if (data.status === "scheduled") {
+          elements.scheduleDateGroup.style.display = "block";
+        }
 
         elements.draftAlert.style.display = "none";
         syncRenderPreview();
@@ -1027,6 +1369,7 @@
         elements.draftStatus.textContent = "Auto-save Enabled";
       }
 
+      // DETECT EDIT MODE VIA URL QUERY PARAMETER (?edit=POST_ID)
       async function checkForEditMode() {
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('edit');
@@ -1044,6 +1387,7 @@
           if (docSnap.exists()) {
             editingPostId = postId;
             const post = docSnap.data();
+            currentPostSnapshot = post;
 
             elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-to-square me-2"></i>Edit Article (ID: ${postId.substring(0,6)}...)`;
             elements.btnSubmitText.textContent = "Update Existing Post";
@@ -1060,6 +1404,13 @@
             elements.imageUrl.value = post.imageUrl || "";
             elements.isFeatured.checked = !!post.isFeatured;
 
+            if (post.status === "scheduled" && post.scheduledAt) {
+              elements.scheduleDateGroup.style.display = "block";
+              const dt = post.scheduledAt.toDate();
+              const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+              elements.scheduledAt.value = localIso;
+            }
+
             if (post.videoUrl) {
               elements.videoUrl.value = post.videoUrl;
               elements.videoUrlGroup.style.display = "block";
@@ -1073,6 +1424,7 @@
 
             if (post.content) quill.clipboard.dangerouslyPasteHTML(post.content);
 
+            await loadRevisions(postId);
             syncRenderPreview();
             showNotification("Loaded article for editing.", "info");
           }
@@ -1091,7 +1443,9 @@
 
           elements.author.innerHTML = '<option value="">Select Author Account</option>';
           authorsSnapshot.forEach(docInst => {
-            elements.author.innerHTML += `<option value="${docInst.id}">${docInst.data().name}</option>`;
+            const authorData = docInst.data();
+            authorsMap[docInst.id] = authorData.name || "Boon News Desk";
+            elements.author.innerHTML += `<option value="${docInst.id}">${authorData.name}</option>`;
           });
 
           elements.category.innerHTML = '<option value="">Select Category</option>';
@@ -1124,7 +1478,7 @@
         saveDraftToLocalStorage();
       });
 
-      ["title", "summary", "category", "minutesRead", "tags", "author", "videoUrl", "status", "focusKeyword", "metaTitle", "metaDescription"].forEach(id => {
+      ["title", "summary", "category", "minutesRead", "tags", "author", "videoUrl", "scheduledAt", "focusKeyword", "metaTitle", "metaDescription"].forEach(id => {
         elements[id].addEventListener("input", () => { syncRenderPreview(); saveDraftToLocalStorage(); });
         elements[id].addEventListener("change", () => { syncRenderPreview(); saveDraftToLocalStorage(); });
       });
@@ -1179,6 +1533,9 @@
           quill.setText('');
           clearDraft();
           editingPostId = null;
+          currentPostSnapshot = null;
+          elements.revisionPanel.style.display = "none";
+          elements.scheduleDateGroup.style.display = "none";
           elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-nib me-2"></i>Create New Post`;
           elements.btnSubmitText.textContent = "Publish Article";
           elements.videoUrlGroup.style.display = "none";
@@ -1188,6 +1545,7 @@
         }
       });
 
+      // SUBMIT HANDLER
       elements.form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -1196,9 +1554,14 @@
         const postType = elements.postType.value;
         const category = elements.category.value;
         const authorId = elements.author.value;
+        const statusVal = elements.status.value;
 
         if (!title || !plainTextContent || !postType || !category || !authorId) {
           return showNotification("Please complete all required fields.", "error");
+        }
+
+        if (statusVal === "scheduled" && !elements.scheduledAt.value) {
+          return showNotification("Please select a future date and time for scheduled publishing.", "error");
         }
 
         isSubmitting = true;
@@ -1210,27 +1573,73 @@
 
         try {
           const nowTimestamp = Timestamp.now();
-          const generatedPostIsoStr = nowTimestamp.toDate().toISOString();
+          const postSlug = createSlug(title);
+          const authorName = authorsMap[authorId] || "Boon News Desk";
+
+          const scheduledTimestamp = (statusVal === "scheduled" && elements.scheduledAt.value)
+            ? Timestamp.fromDate(new Date(elements.scheduledAt.value))
+            : null;
+
+          const publishIsoStr = scheduledTimestamp
+            ? scheduledTimestamp.toDate().toISOString()
+            : nowTimestamp.toDate().toISOString();
           
           const targetDocRef = editingPostId 
             ? doc(db, "newsPosts", editingPostId) 
             : doc(collection(db, "newsPosts"));
 
+          // Archive previous version into Revision History subcollection when editing
+          if (editingPostId && currentPostSnapshot) {
+            await addDoc(collection(db, "newsPosts", editingPostId, "revisions"), {
+              title: currentPostSnapshot.title || "",
+              summary: currentPostSnapshot.summary || "",
+              content: currentPostSnapshot.content || "",
+              savedAt: nowTimestamp,
+              editedBy: currentUserEmail
+            });
+          }
+
+          // Generate Schema.org NewsArticle JSON-LD
+          const newsArticleSchema = {
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": title,
+            "description": elements.summary.value.trim(),
+            "datePublished": publishIsoStr,
+            "dateModified": nowTimestamp.toDate().toISOString(),
+            "author": [{
+              "@type": "Person",
+              "name": authorName
+            }],
+            "publisher": {
+              "@type": "Organization",
+              "name": "Boon News",
+              "url": "https://boonnewsng.blog"
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://boonnewsng.blog/${postSlug}`
+            }
+          };
+
           const payload = {
             id: targetDocRef.id,
             title,
-            slug: createSlug(title),
-            status: elements.status.value,
+            slug: postSlug,
+            status: statusVal,
+            scheduledAt: scheduledTimestamp,
             content: sanitizedContent,
             summary: elements.summary.value.trim(),
             postType,
             videoUrl: postType === "video" ? elements.videoUrl.value.trim() : null,
-            tags: elements.tags.value.split(",").map(t => t.trim().toLowerCase()).filter(Boolean),
+            tags: parseUniqueTags(elements.tags.value),
             minutesRead: parseInt(elements.minutesRead.value) || 1,
             category,
             authorId,
+            authorName,
             imageUrl: formatDropboxUrl(elements.imageUrl.value),
             isFeatured: elements.isFeatured.checked,
+            schemaJsonLd: JSON.stringify(newsArticleSchema),
             seo: {
               focusKeyword: elements.focusKeyword.value.trim(),
               metaTitle: elements.metaTitle.value.trim() || title,
@@ -1239,7 +1648,7 @@
             updatedAt: nowTimestamp,
             createdAt: editingPostId ? undefined : nowTimestamp,
             featuredAt: elements.isFeatured.checked ? nowTimestamp : null,
-            timestamp: generatedPostIsoStr,
+            timestamp: publishIsoStr,
             views: editingPostId ? undefined : 0
           };
 
@@ -1247,12 +1656,18 @@
 
           await setDoc(targetDocRef, payload, { merge: true });
 
-          showNotification(editingPostId ? "Article updated successfully!" : "Article published successfully!");
+          const msg = editingPostId 
+            ? "Article updated and revision saved!" 
+            : (statusVal === "scheduled" ? "Article scheduled successfully!" : "Article published successfully!");
+          showNotification(msg);
           
           elements.form.reset();
           quill.setText('');
           clearDraft();
           editingPostId = null;
+          currentPostSnapshot = null;
+          elements.revisionPanel.style.display = "none";
+          elements.scheduleDateGroup.style.display = "none";
           elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-nib me-2"></i>Create New Post`;
           elements.btnSubmitText.textContent = "Publish Article";
           elements.videoUrlGroup.style.display = "none";
@@ -1267,6 +1682,7 @@
         }
       });
 
+      // BOOTSTRAP INITIALIZATION
       async function bootstrapWorkspace() {
         await loadFormSelectors();
         await checkForEditMode();
