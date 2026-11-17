@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER-CMS // Content Workspace (Pro Edition)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <!-- Official Dropbox Chooser SDK (Replace YOUR_DROPBOX_APP_KEY with your actual Dropbox App Key) -->
+    <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="9sfwz8j1bd1z5x8"></script>
+
+    <style>
+      :root {
+        --bg-deep: #090d16;
+        --panel-bg: #111827;
+        --panel-border: #1f2937;
+        --accent-blue: #2563eb;
+        --tech-green: #059669;
+        --tech-yellow: #d97706;
+        --tech-pink: #e11d48;
+        --tech-cyan: #06b6d4;
+        --text-main: #f8fafc;
+        --text-dim: #94a3b8;
+        --sidebar-width: 260px;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background-color: var(--bg-deep);
+        color: var(--text-main);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .cyber-grid {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: linear-gradient(rgba(31, 41, 55, 0.15) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(31, 41, 55, 0.15) 1px, transparent 1px);
+        background-size: 30px 30px;
+        z-index: -1;
+      }
+
+      .mobile-header {
+        display: none;
+        height: 60px;
+        background: var(--panel-bg);
+        border-bottom: 1px solid var(--panel-border);
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .app-container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      aside {
+        width: var(--sidebar-width);
+        background: var(--panel-bg);
+        border-right: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 90;
+      }
+
+      .brand-box { margin-bottom: 20px; }
+
+      .brand-title {
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #fff;
+        letter-spacing: 0.05em;
+      }
+
+      .brand-subtitle {
+        font-size: 0.7rem;
+        color: var(--tech-cyan);
+        letter-spacing: 0.1em;
+      }
+
+      .user-status-box {
+        font-size: 0.75rem;
+        background: rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        padding: 8px 10px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        word-break: break-all;
+        color: var(--text-dim);
+      }
+
+      .nav-menu {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .nav-item a, .nav-item button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        color: var(--text-dim);
+        text-decoration: none;
+        font-size: 0.85rem;
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .nav-item a:hover, .nav-item button:hover, .nav-item.active a {
+        background: rgba(37, 99, 235, 0.15);
+        color: #fff;
+      }
+
+      .nav-item.active a {
+        border-left: 3px solid var(--accent-blue);
+      }
+
+      main {
+        flex-grow: 1;
+        padding: 24px;
+        max-width: calc(100vw - var(--sidebar-width));
+      }
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        padding: 16px 20px;
+        border-radius: 10px;
+      }
+
+      .view-title h1 {
+        font-size: 1.25rem;
+        font-family: 'Orbitron', sans-serif;
+        color: #fff;
+      }
+
+      .view-title p {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+      }
+
+      .action-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .cyber-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: opacity 0.2s;
+      }
+
+      .cyber-btn:hover { opacity: 0.9; }
+      .cyber-btn.green { background: var(--tech-green); color: #fff; }
+      .cyber-btn.yellow { background: var(--tech-yellow); color: #fff; }
+      .cyber-btn.red { background: var(--tech-pink); color: #fff; }
+      .cyber-btn.blue { background: var(--accent-blue); color: #fff; }
+      .cyber-btn.dropbox { background: #0061fe; color: #fff; }
+      .cyber-btn.outline {
+        background: transparent;
+        border: 1px solid var(--panel-border);
+        color: var(--text-main);
+      }
+      .cyber-btn.outline:hover {
+        border-color: var(--tech-cyan);
+        color: var(--tech-cyan);
+      }
+
+      .editor-workspace-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+      }
+
+      .cyber-panel {
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .panel-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-dim);
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .panel-title span {
+        color: var(--accent-blue);
+        font-size: 0.7rem;
+      }
+
+      .form-group { margin-bottom: 14px; }
+
+      .form-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .char-counter {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.75rem;
+        text-transform: none;
+      }
+      .char-optimal { color: var(--tech-green); }
+      .char-warn { color: var(--tech-yellow); }
+      .char-over { color: var(--tech-pink); }
+
+      .cyber-input, .cyber-select, .cyber-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        background: #090d16;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        color: #fff;
+        font-size: 0.9rem;
+      }
+
+      .cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus {
+        outline: 1px solid var(--accent-blue);
+        border-color: var(--accent-blue);
+      }
+
+      .headline-input {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .tag-chips-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .tag-chip {
+        background: rgba(6, 182, 212, 0.12);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        color: var(--tech-cyan);
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: 'Share Tech Mono', monospace;
+      }
+
+      .editor-wrapper {
+        background: #090d16;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .ql-toolbar.ql-snow {
+        background: #111827;
+        border-color: var(--panel-border) !important;
+      }
+
+      .ql-container.ql-snow {
+        border: none !important;
+        color: #fff;
+        font-size: 0.95rem;
+        min-height: 260px;
+      }
+
+      .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #090d16;
+        padding: 10px 14px;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 22px;
+      }
+
+      .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+      .toggle-slider {
+        position: absolute; cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: var(--panel-border);
+        transition: .3s;
+        border-radius: 22px;
+      }
+
+      .toggle-slider:before {
+        position: absolute; content: "";
+        height: 16px; width: 16px; left: 3px; bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+      }
+
+      input:checked + .toggle-slider { background-color: var(--accent-blue); }
+      input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+      .preview-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+        background: #090d16;
+        padding: 4px;
+        border-radius: 6px;
+        border: 1px solid var(--panel-border);
+      }
+
+      .preview-tab-btn {
+        flex: 1;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .preview-tab-btn.active {
+        background: var(--accent-blue);
+        color: #fff;
+      }
+
+      .preview-card {
+        background: #090d16;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .preview-image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 160px;
+        background: #1f2937;
+      }
+
+      .preview-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .video-overlay-icon {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 36px; height: 36px;
+        background: rgba(0,0,0,0.7);
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+      }
+
+      .preview-body { padding: 14px; }
+
+      .preview-badge {
+        display: inline-block;
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        background: rgba(37, 99, 235, 0.15);
+        color: var(--accent-blue);
+        border-radius: 4px;
+        margin-right: 4px;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+
+      .preview-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 6px;
+      }
+
+      .preview-summary, .preview-content {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        line-height: 1.4;
+      }
+
+      .og-preview-card {
+        display: none;
+        background: #1a2234;
+        border: 1px solid #2e3b55;
+        border-radius: 8px;
+        overflow: hidden;
+        font-family: Helvetica, Arial, sans-serif;
+      }
+
+      .og-image {
+        width: 100%;
+        height: 175px;
+        object-fit: cover;
+        background: #0f172a;
+        display: block;
+      }
+
+      .og-meta {
+        padding: 10px 12px;
+        background: #1e293b;
+        border-top: 1px solid #334155;
+      }
+
+      .og-domain {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        color: #94a3b8;
+        letter-spacing: 0.04em;
+        margin-bottom: 3px;
+      }
+
+      .og-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #f8fafc;
+        line-height: 1.25;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .og-desc {
+        font-size: 0.76rem;
+        color: #cbd5e1;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .revision-list {
+        max-height: 180px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .revision-item {
+        background: #090d16;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 8px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+      }
+
+      .revision-info strong { color: #fff; display: block; }
+      .revision-info span { color: var(--text-dim); font-size: 0.7rem; }
+
+      .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .modal-backdrop.active { display: flex; }
+
+      .modal-box {
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        width: 100%;
+        max-width: 680px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .modal-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--panel-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-body {
+        padding: 16px;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+      }
+
+      .media-thumb {
+        background: #090d16;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: border-color 0.2s;
+      }
+      .media-thumb:hover { border-color: var(--tech-cyan); }
+      .media-thumb img {
+        width: 100%;
+        height: 95px;
+        object-fit: cover;
+        display: block;
+      }
+      .media-thumb-caption {
+        padding: 6px;
+        font-size: 0.7rem;
+        color: var(--text-dim);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .cyber-alert {
+        display: none;
+        background: rgba(217, 119, 6, 0.15);
+        border: 1px solid var(--tech-yellow);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: #fde68a;
+      }
+
+      .notification {
+        position: fixed;
+        top: 20px; right: 20px;
+        padding: 12px 20px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-left: 4px solid var(--accent-blue);
+        color: #fff;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+        z-index: 1000;
+        display: none;
+      }
+      .notification.error { border-left-color: var(--tech-pink); }
+      .notification.info { border-left-color: var(--tech-cyan); }
+
+      .sys-ticker {
+        display: flex;
+        gap: 20px;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        padding-top: 10px;
+        border-top: 1px solid var(--panel-border);
+      }
+
+      .drawer-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 85;
+      }
+
+      @media (max-width: 1024px) {
+        .editor-workspace-grid { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 768px) {
+        .mobile-header { display: flex; }
+        aside {
+          position: fixed;
+          top: 0; left: -100%;
+          height: 100vh;
+          transition: 0.3s ease;
+          box-shadow: 10px 0 25px rgba(0,0,0,0.5);
+        }
+        aside.open { left: 0; }
+        .drawer-overlay.active { display: block; }
+        main { max-width: 100%; padding: 16px; }
+      }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+    <div id="notification" class="notification"></div>
+
+    <!-- MEDIA LIBRARY MODAL -->
+    <div class="modal-backdrop" id="mediaModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span style="font-family:'Orbitron',sans-serif; font-size:0.9rem; font-weight:700;">
+                    <i class="fa-solid fa-images me-2" style="color:var(--tech-cyan);"></i> Recent Media Assets
+                </span>
+                <button type="button" class="cyber-btn outline" id="btnCloseMediaModal" style="padding:4px 10px; font-size:0.75rem;">
+                    <i class="fa-solid fa-xmark"></i> Close
+                </button>
+            </div>
+            <div class="modal-body" id="mediaGrid">
+                <p style="color:var(--text-dim); font-size:0.8rem; grid-column:1/-1;">Loading media assets from Firestore...</p>
+            </div>
+        </div>
+    </div>
+
+    <header class="mobile-header">
+        <div class="brand-title">BoonNews_CMS</div>
+        <button class="cyber-btn" id="menuToggleBtn" aria-label="Toggle Drawer Menu" style="background:transparent; color:#fff;">
+            <i class="fa-solid fa-bars" style="font-size: 1.2rem;"></i>
+        </button>
+    </header>
+
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <div class="app-container">
+        <aside id="sideNav">
+            <div>
+                <div class="brand-box">
+                    <div class="brand-title">BoonNews_CMS</div>
+                    <div class="brand-subtitle">ADMIN ADD POST</div>
+                </div>
+
+                <div class="user-status-box" id="userDisplay">
+                    Authenticating credentials...
+                </div>
+
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="index.html"><i class="fa-solid fa-terminal"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="posts.html"><i class="fa-solid fa-newspaper"></i> Articles</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="editor.html"><i class="fa-solid fa-plus"></i> Add Post</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="category.html"><i class="fa-solid fa-folder-tree"></i> Categories</a>
+                    </li>
+                    <li class="nav-item"><button id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button></li>
+                </ul>
+            </div>
+            
+            <div style="font-size: 0.7rem; color: var(--text-dim); text-align: center; border-top: 1px solid var(--panel-border); padding-top: 10px; font-weight: bold;">
+                STATUS: <span id="draftStatus" style="color:var(--tech-green);">Auto-save Enabled</span>
+            </div>
+        </aside>
+
+        <main>
+            <div id="draftAlert" class="cyber-alert">
+                <div>
+                    <i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>
+                    <span>Unsaved draft detected in browser storage. Restore session?</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="cyber-btn yellow" id="btnRestoreDraft" style="padding: 4px 8px; font-size: 0.75rem;">Restore</button>
+                    <button type="button" class="cyber-btn red" id="btnDiscardDraft" style="padding: 4px 8px; font-size: 0.75rem;">Discard</button>
+                </div>
+            </div>
+
+            <form id="newsForm">
+                
+                <div class="top-bar">
+                    <div class="view-title">
+                        <h1 id="formHeaderTitle"><i class="fa-solid fa-pen-nib me-2"></i> Create New Post</h1>
+                        <p>Write news articles and reports according to editorial & Google News standards.</p>
+                    </div>
+                    <div class="action-group">
+                        <button type="button" class="cyber-btn red" id="btnClearForm">
+                            <i class="fa-solid fa-trash"></i> Reset
+                        </button>
+                        <button type="button" class="cyber-btn yellow" id="btnManualSaveDraft">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Draft
+                        </button>
+                        <button type="submit" class="cyber-btn green">
+                            <i class="fa-solid fa-paper-plane"></i> <span id="btnSubmitText">Publish Article</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="editor-workspace-grid">
+                    
+                    <div class="main-canvas">
+                        
+                        <div class="cyber-panel">
+                            <div class="form-group">
+                                <label class="form-label" for="title">
+                                    <span>Article Title / Headline</span>
+                                    <span id="headlineCounter" class="char-counter">0 / 70 chars</span>
+                                </label>
+                                <input type="text" id="title" class="cyber-input headline-input" placeholder="Enter headline text here..." required>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="postType">Post Type</label>
+                                    <select id="postType" class="cyber-select" required>
+                                        <option value="standard">Standard Article</option>
+                                        <option value="editor-choice">Editor's Choice</option>
+                                        <option value="video">Video Feed Post</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="videoUrlGroup" style="display: none;">
+                                    <label class="form-label" for="videoUrl">Video Stream Source URL</label>
+                                    <input type="url" id="videoUrl" class="cyber-input" placeholder="https://youtube.com/watch?v=...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Article Content <span>FULL BODY</span></div>
+                            <div class="editor-wrapper">
+                                <div id="editor"></div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Article Overview & Metadata</div>
+                            <div class="form-group">
+                                <label class="form-label" for="summary">Summary / Excerpt</label>
+                                <textarea id="summary" class="cyber-textarea" style="min-height: 70px;" placeholder="Brief article excerpt..."></textarea>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                                <div class="form-group">
+                                    <label class="form-label" for="tags">
+                                        <span>Tags (Comma-Separated)</span>
+                                        <span id="tagCountBadge" class="char-counter">0 unique</span>
+                                    </label>
+                                    <input type="text" id="tags" class="cyber-input" placeholder="politics, cbn, economy">
+                                    <div id="tagChipsPreview" class="tag-chips-container"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="minutesRead">Estimated Read Time (Mins)</label>
+                                    <input type="number" id="minutesRead" class="cyber-input" min="1" placeholder="Auto-calculated...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Search Engine Optimization <span>SEO ENGINE</span></div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="focusKeyword">Focus Keyword</label>
+                                <input type="text" id="focusKeyword" class="cyber-input" placeholder="e.g. Nigeria Economy">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="metaTitle">
+                                    <span>SEO Meta Title</span>
+                                    <span id="metaTitleCounter" class="char-counter">0 / 60 chars (Optimal: 50-60)</span>
+                                </label>
+                                <input type="text" id="metaTitle" class="cyber-input" placeholder="Overrides headline if specified...">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="metaDescription">
+                                    <span>SEO Meta Description</span>
+                                    <span id="metaDescCounter" class="char-counter">0 / 160 chars (Optimal: 150-160)</span>
+                                </label>
+                                <textarea id="metaDescription" class="cyber-textarea" style="min-height: 55px;" placeholder="Meta description for search engine result pages..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- REVISION HISTORY PANEL -->
+                        <div class="cyber-panel" id="revisionPanel" style="display: none;">
+                            <div class="panel-title">
+                                <span>Article Revision History</span>
+                                <span id="revisionCount">0 SAVED VERSIONS</span>
+                            </div>
+                            <div class="revision-list" id="revisionList"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="sidebar-controls">
+                        
+                        <div class="cyber-panel">
+                            <div class="panel-title">Publishing & Scheduling</div>
+                            <div class="form-group">
+                                <label class="form-label" for="status">Publication Status</label>
+                                <select id="status" class="cyber-select">
+                                    <option value="published">PUBLISHED IMMEDIATELY</option>
+                                    <option value="scheduled">SCHEDULE FOR LATER</option>
+                                    <option value="draft">Save As DRAFT</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="scheduleDateGroup" style="display: none;">
+                                <label class="form-label" for="scheduledAt">Publish Date & Time</label>
+                                <input type="datetime-local" id="scheduledAt" class="cyber-input">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div class="toggle-row">
+                                    <span class="form-label" style="margin: 0;">Set As Hero (Featured)</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="isFeatured">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Category & Author</div>
+                            <div class="form-group">
+                                <label class="form-label" for="category">Category</label>
+                                <select id="category" class="cyber-select" required>
+                                    <option value="">Fetching Categories...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="author">Author Account</label>
+                                <select id="author" class="cyber-select" required>
+                                    <option value="">Fetching Authors...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title" style="margin-bottom:10px;">
+                                <span>Article Image Media</span>
+                                <div style="display:flex; gap:6px;">
+                                    <button type="button" class="cyber-btn dropbox" id="btnDropboxPicker" style="padding:3px 8px; font-size:0.7rem;">
+                                        <i class="fa-brands fa-dropbox"></i> Dropbox
+                                    </button>
+                                    <button type="button" class="cyber-btn outline" id="btnOpenMediaLibrary" style="padding:3px 8px; font-size:0.7rem;">
+                                        <i class="fa-solid fa-photo-film"></i> Library
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label" for="imageUrl">Direct Image URL</label>
+                                <input type="url" id="imageUrl" class="cyber-input" placeholder="https://dl.dropboxusercontent.com/...">
+                                <div id="imageStatus" style="font-size:0.7rem; margin-top: 6px; font-weight: bold;"></div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-panel">
+                            <div class="panel-title">Live Card & Social Preview</div>
+                            
+                            <div class="preview-tabs">
+                                <button type="button" class="preview-tab-btn active" id="tabSiteCard">Site Card</button>
+                                <button type="button" class="preview-tab-btn" id="tabSocialOg">WhatsApp / FB Card</button>
+                            </div>
+
+                            <!-- SITE FEED CARD PREVIEW -->
+                            <div class="preview-card" id="siteCardPreview">
+                                <div class="preview-image-wrapper">
+                                    <img id="previewImage" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='400' viewBox='0 0 900 400'><rect width='100%' height='100%' fill='%23e2e8f0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='18'>Awaiting Media Asset</text></svg>" alt="Preview Asset">
+                                    <div id="videoIconOverlay" class="video-overlay-icon"><i class="fa-solid fa-play"></i></div>
+                                </div>
+                                <div class="preview-body">
+                                    <span id="previewCategory" class="preview-badge">CATEGORY</span>
+                                    <span id="previewSection" class="preview-badge" style="background: rgba(225, 29, 72, 0.1); color: var(--tech-pink);">Standard</span>
+                                    <span class="preview-badge" style="background: rgba(217, 119, 6, 0.1); color: var(--tech-yellow);"><span id="previewMinutes">0</span> Min Read</span>
+                                    <div id="previewTitle" class="preview-title">Headline Preview</div>
+                                    <div id="previewSummary" class="preview-summary">Excerpt snippet will render here...</div>
+                                    <div id="previewContent" class="preview-content">Body text preview...</div>
+                                </div>
+                            </div>
+
+                            <!-- OPENGRAPH WHATSAPP / FACEBOOK SHARE PREVIEW -->
+                            <div class="og-preview-card" id="socialOgPreview">
+                                <img id="ogPreviewImage" class="og-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='470' viewBox='0 0 900 470'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='20'>OpenGraph Share Image (1200x630)</text></svg>" alt="OG Preview">
+                                <div class="og-meta">
+                                    <div class="og-domain">boonnewsng.blog</div>
+                                    <div class="og-title" id="ogPreviewTitle">Headline Preview</div>
+                                    <div class="og-desc" id="ogPreviewDesc">Meta description or article summary snippet for WhatsApp and Facebook shares...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </form>
+
+            <div class="sys-ticker">
+                <div>FIREBASE_AUTH: <span style="color:var(--tech-green)">ONLINE</span></div>
+                <div>DROPBOX_CHOOSER: <span style="color:var(--tech-cyan)">ACTIVE</span></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+
+    <script>
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const sideNav = document.getElementById('sideNav');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+
+        function toggleDrawer() {
+            sideNav.classList.toggle('open');
+            drawerOverlay.classList.toggle('active');
+        }
+
+        menuToggleBtn.addEventListener('click', toggleDrawer);
+        drawerOverlay.addEventListener('click', toggleDrawer);
+    </script>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+      import { 
+        getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, query, orderBy, limit, Timestamp 
+      } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBfoxEnVep0wX5V_KVS-cd8o5sUMvrFY4c",
+        authDomain: "primeintelmedia-e2fe3.firebaseapp.com",
+        databaseURL: "https://primeintelmedia-e2fe3-default-rtdb.firebaseio.com",
+        projectId: "primeintelmedia-e2fe3",
+        storageBucket: "primeintelmedia-e2fe3.firebasestorage.app",
+        messagingSenderId: "228866357632",
+        appId: "1:228866357632:web:72dc9942f1cd41d857a965",
+        measurementId: "G-G0HRRV932S"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const LOCAL_STORAGE_KEY = "admin_add_post_draft";
+      const FALLBACK_IMG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400"><rect width="100%" height="100%" fill="%23e2e8f0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2364748b" font-size="18">Awaiting Media Asset</text></svg>`;
+
+      let editingPostId = null;
+      let currentPostSnapshot = null;
+      let isSubmitting = false;
+      let authorsMap = {};
+      let currentUserEmail = "Admin";
+
+      const quill = new Quill('#editor', {
+        theme: 'snow',
+        placeholder: 'Write main body text here...',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            ['link', 'clean']
+          ]
+        }
+      });
+
+      quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+        delta.ops.forEach(op => {
+          if (op.insert && typeof op.insert === 'object' && op.insert.image) {
+            if (op.insert.image.startsWith('data:image')) {
+              op.insert.image = '';
+              showNotification("Base64 inline images disabled. Please use direct image links.", "error");
+            }
+          }
+        });
+        return delta;
+      });
+
+      const elements = {
+        form: document.getElementById("newsForm"),
+        title: document.getElementById("title"),
+        headlineCounter: document.getElementById("headlineCounter"),
+        postType: document.getElementById("postType"),
+        status: document.getElementById("status"),
+        scheduleDateGroup: document.getElementById("scheduleDateGroup"),
+        scheduledAt: document.getElementById("scheduledAt"),
+        videoUrlGroup: document.getElementById("videoUrlGroup"),
+        videoUrl: document.getElementById("videoUrl"),
+        summary: document.getElementById("summary"),
+        tags: document.getElementById("tags"),
+        tagCountBadge: document.getElementById("tagCountBadge"),
+        tagChipsPreview: document.getElementById("tagChipsPreview"),
+        minutesRead: document.getElementById("minutesRead"),
+        author: document.getElementById("author"),
+        category: document.getElementById("category"),
+        imageUrl: document.getElementById("imageUrl"),
+        focusKeyword: document.getElementById("focusKeyword"),
+        metaTitle: document.getElementById("metaTitle"),
+        metaTitleCounter: document.getElementById("metaTitleCounter"),
+        metaDescription: document.getElementById("metaDescription"),
+        metaDescCounter: document.getElementById("metaDescCounter"),
+        isFeatured: document.getElementById("isFeatured"),
+        imageStatus: document.getElementById("imageStatus"),
+        
+        pTitle: document.getElementById("previewTitle"),
+        pCategory: document.getElementById("previewCategory"),
+        pSection: document.getElementById("previewSection"),
+        pMinutes: document.getElementById("previewMinutes"),
+        pSummary: document.getElementById("previewSummary"),
+        pContent: document.getElementById("previewContent"),
+        pImage: document.getElementById("previewImage"),
+        pVideoOverlay: document.getElementById("videoIconOverlay"),
+
+        tabSiteCard: document.getElementById("tabSiteCard"),
+        tabSocialOg: document.getElementById("tabSocialOg"),
+        siteCardPreview: document.getElementById("siteCardPreview"),
+        socialOgPreview: document.getElementById("socialOgPreview"),
+        ogPreviewImage: document.getElementById("ogPreviewImage"),
+        ogPreviewTitle: document.getElementById("ogPreviewTitle"),
+        ogPreviewDesc: document.getElementById("ogPreviewDesc"),
+
+        btnDropboxPicker: document.getElementById("btnDropboxPicker"),
+        btnOpenMediaLibrary: document.getElementById("btnOpenMediaLibrary"),
+        mediaModal: document.getElementById("mediaModal"),
+        btnCloseMediaModal: document.getElementById("btnCloseMediaModal"),
+        mediaGrid: document.getElementById("mediaGrid"),
+
+        revisionPanel: document.getElementById("revisionPanel"),
+        revisionCount: document.getElementById("revisionCount"),
+        revisionList: document.getElementById("revisionList"),
+
+        notification: document.getElementById("notification"),
+        draftAlert: document.getElementById("draftAlert"),
+        btnRestoreDraft: document.getElementById("btnRestoreDraft"),
+        btnDiscardDraft: document.getElementById("btnDiscardDraft"),
+        btnManualSaveDraft: document.getElementById("btnManualSaveDraft"),
+        btnClearForm: document.getElementById("btnClearForm"),
+        draftStatus: document.getElementById("draftStatus"),
+        formHeaderTitle: document.getElementById("formHeaderTitle"),
+        btnSubmitText: document.getElementById("btnSubmitText"),
+        userDisplay: document.getElementById("userDisplay"),
+        btnLogout: document.getElementById("btnLogout")
+      };
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          showNotification("Unauthorized access! Redirecting...", "error");
+          setTimeout(() => { window.location.href = "login.html"; }, 1500);
+        } else {
+          currentUserEmail = user.email;
+          elements.userDisplay.textContent = `User: ${user.email}`;
+        }
+      });
+
+      elements.btnLogout.addEventListener("click", () => signOut(auth));
+
+      function createSlug(text) {
+        return text.toLowerCase().trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      function showNotification(message, type = "success") {
+        elements.notification.textContent = message;
+        elements.notification.className = `notification ${type}`;
+        elements.notification.style.display = "block";
+        setTimeout(() => { elements.notification.style.display = "none"; }, 3200);
+      }
+
+      function formatDropboxUrl(url) {
+        if (!url) return "";
+        let cleanUrl = url.trim();
+        if (cleanUrl.includes("dropbox.com")) {
+          cleanUrl = cleanUrl
+            .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+            .replace("dl.dropbox.com", "dl.dropboxusercontent.com")
+            .replace("?dl=0", "")
+            .replace("?dl=1", "");
+        }
+        return cleanUrl;
+      }
+
+      // DROPBOX CHOOSER EVENT LISTENER
+      elements.btnDropboxPicker.addEventListener("click", () => {
+        if (typeof Dropbox === "undefined") {
+          return showNotification("Dropbox SDK not loaded. Check your App Key.", "error");
+        }
+
+        Dropbox.choose({
+          linkType: "direct",
+          multiselect: false,
+          extensions: ['.png', '.jpg', '.jpeg', '.webp', '.gif'],
+          success: function(files) {
+            if (files && files.length > 0) {
+              const directUrl = formatDropboxUrl(files[0].link);
+              elements.imageUrl.value = directUrl;
+              elements.imageStatus.innerHTML = `<span style="color:var(--tech-green)"><i class="fa-solid fa-circle-check me-1"></i>Selected from Dropbox: ${files[0].name}</span>`;
+              syncRenderPreview();
+              saveDraftToLocalStorage();
+            }
+          }
+        });
+      });
+
+      function parseUniqueTags(rawTagString) {
+        const cleaned = rawTagString
+          .split(",")
+          .map(t => t.trim().toLowerCase())
+          .filter(Boolean);
+        return [...new Set(cleaned)];
+      }
+
+      function updateTagFeedback() {
+        const uniqueTags = parseUniqueTags(elements.tags.value);
+        elements.tagCountBadge.textContent = `${uniqueTags.length} unique`;
+        elements.tagChipsPreview.innerHTML = uniqueTags
+          .map(tag => `<span class="tag-chip">#${tag}</span>`)
+          .join("");
+      }
+
+      function updateSeoCounters() {
+        const titleLen = elements.title.value.trim().length;
+        elements.headlineCounter.textContent = `${titleLen} / 70 chars`;
+        elements.headlineCounter.className = `char-counter ${titleLen > 70 ? 'char-over' : titleLen >= 40 ? 'char-optimal' : ''}`;
+
+        const metaTitleLen = elements.metaTitle.value.trim().length;
+        elements.metaTitleCounter.textContent = `${metaTitleLen} / 60 chars (Optimal: 50-60)`;
+        elements.metaTitleCounter.className = `char-counter ${
+          metaTitleLen === 0 ? '' :
+          metaTitleLen > 60 ? 'char-over' :
+          metaTitleLen >= 50 ? 'char-optimal' : 'char-warn'
+        }`;
+
+        const metaDescLen = elements.metaDescription.value.trim().length;
+        elements.metaDescCounter.textContent = `${metaDescLen} / 160 chars (Optimal: 150-160)`;
+        elements.metaDescCounter.className = `char-counter ${
+          metaDescLen === 0 ? '' :
+          metaDescLen > 160 ? 'char-over' :
+          metaDescLen >= 150 ? 'char-optimal' : 'char-warn'
+        }`;
+      }
+
+      function autoCalculateReadTime() {
+        const text = quill.getText().trim();
+        if (!text) {
+          elements.minutesRead.value = "";
+          return;
+        }
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        elements.minutesRead.value = Math.max(1, Math.ceil(wordCount / 200));
+      }
+
+      function syncRenderPreview() {
+        const sectionLabels = {
+          'standard': 'Standard Story',
+          'editor-choice': "Editor's Choice",
+          'video': 'Video Feed'
+        };
+
+        const activeTitle = elements.title.value.trim() || "Article Title Preview";
+        const activeSummary = elements.summary.value.trim() || "Excerpt description preview will render here...";
+        const cleanImgUrl = formatDropboxUrl(elements.imageUrl.value);
+
+        elements.pTitle.textContent = activeTitle;
+        elements.pSummary.textContent = activeSummary;
+        elements.pCategory.textContent = elements.category.value || "Category";
+        elements.pMinutes.textContent = elements.minutesRead.value || "0";
+        
+        const plainText = quill.getText().trim();
+        if (plainText) {
+          elements.pContent.innerHTML = typeof DOMPurify !== 'undefined' 
+            ? DOMPurify.sanitize(quill.root.innerHTML) 
+            : quill.root.innerHTML;
+        } else {
+          elements.pContent.innerHTML = `<small style="color:var(--text-dim)">Body text preview will render here...</small>`;
+        }
+
+        const contextRoute = elements.postType.value;
+        elements.pSection.textContent = contextRoute ? `Target: ${sectionLabels[contextRoute]}` : "Target: Standard";
+        elements.pVideoOverlay.style.display = (contextRoute === "video") ? "flex" : "none";
+
+        elements.pImage.src = cleanImgUrl || FALLBACK_IMG;
+        elements.pImage.onerror = () => { elements.pImage.src = FALLBACK_IMG; };
+
+        elements.ogPreviewTitle.textContent = elements.metaTitle.value.trim() || activeTitle;
+        elements.ogPreviewDesc.textContent = elements.metaDescription.value.trim() || activeSummary;
+        elements.ogPreviewImage.src = cleanImgUrl || FALLBACK_IMG;
+        elements.ogPreviewImage.onerror = () => { elements.ogPreviewImage.src = FALLBACK_IMG; };
+
+        updateSeoCounters();
+        updateTagFeedback();
+      }
+
+      elements.tabSiteCard.addEventListener("click", () => {
+        elements.tabSiteCard.classList.add("active");
+        elements.tabSocialOg.classList.remove("active");
+        elements.siteCardPreview.style.display = "block";
+        elements.socialOgPreview.style.display = "none";
+      });
+
+      elements.tabSocialOg.addEventListener("click", () => {
+        elements.tabSocialOg.classList.add("active");
+        elements.tabSiteCard.classList.remove("active");
+        elements.socialOgPreview.style.display = "block";
+        elements.siteCardPreview.style.display = "none";
+      });
+
+      elements.status.addEventListener("change", () => {
+        if (elements.status.value === "scheduled") {
+          elements.scheduleDateGroup.style.display = "block";
+          elements.scheduledAt.setAttribute("required", "required");
+          elements.btnSubmitText.textContent = editingPostId ? "Update Schedule" : "Schedule Article";
+        } else {
+          elements.scheduleDateGroup.style.display = "none";
+          elements.scheduledAt.removeAttribute("required");
+          elements.btnSubmitText.textContent = editingPostId ? "Update Existing Post" : "Publish Article";
+        }
+        saveDraftToLocalStorage();
+      });
+
+      elements.btnOpenMediaLibrary.addEventListener("click", async () => {
+        elements.mediaModal.classList.add("active");
+        elements.mediaGrid.innerHTML = `<p style="color:var(--text-dim); font-size:0.8rem; grid-column:1/-1;">Fetching recent media from database...</p>`;
+
+        try {
+          const q = query(collection(db, "newsPosts"), orderBy("updatedAt", "desc"), limit(24));
+          const snap = await getDocs(q);
+          const uniqueUrls = new Map();
+
+          snap.forEach(docSnap => {
+            const d = docSnap.data();
+            if (d.imageUrl && !uniqueUrls.has(d.imageUrl)) {
+              uniqueUrls.set(d.imageUrl, d.title || "News Asset");
+            }
+          });
+
+          if (uniqueUrls.size === 0) {
+            elements.mediaGrid.innerHTML = `<p style="color:var(--text-dim); font-size:0.8rem; grid-column:1/-1;">No media assets found in recent posts.</p>`;
+            return;
+          }
+
+          elements.mediaGrid.innerHTML = "";
+          uniqueUrls.forEach((title, url) => {
+            const card = document.createElement("div");
+            card.className = "media-thumb";
+            card.innerHTML = `
+              <img src="${url}" alt="Media asset" loading="lazy">
+              <div class="media-thumb-caption">${title}</div>
+            `;
+            card.addEventListener("click", () => {
+              elements.imageUrl.value = url;
+              elements.imageStatus.innerHTML = `<span style="color:var(--tech-green)"><i class="fa-solid fa-circle-check me-1"></i>Selected from Media Library.</span>`;
+              syncRenderPreview();
+              saveDraftToLocalStorage();
+              elements.mediaModal.classList.remove("active");
+            });
+            elements.mediaGrid.appendChild(card);
+          });
+        } catch (err) {
+          console.error("Media fetch error:", err);
+          elements.mediaGrid.innerHTML = `<p style="color:var(--tech-pink); font-size:0.8rem; grid-column:1/-1;">Could not load media library.</p>`;
+        }
+      });
+
+      elements.btnCloseMediaModal.addEventListener("click", () => {
+        elements.mediaModal.classList.remove("active");
+      });
+
+      async function loadRevisions(postId) {
+        try {
+          const revQuery = query(collection(db, "newsPosts", postId, "revisions"), orderBy("savedAt", "desc"), limit(10));
+          const revSnap = await getDocs(revQuery);
+
+          elements.revisionPanel.style.display = "block";
+          elements.revisionCount.textContent = `${revSnap.size} SAVED VERSIONS`;
+
+          if (revSnap.empty) {
+            elements.revisionList.innerHTML = `<p style="font-size:0.75rem; color:var(--text-dim);">No prior revisions recorded for this article yet.</p>`;
+            return;
+          }
+
+          elements.revisionList.innerHTML = "";
+          revSnap.forEach(docSnap => {
+            const rev = docSnap.data();
+            const dateStr = rev.savedAt ? rev.savedAt.toDate().toLocaleString() : "Unknown date";
+            const item = document.createElement("div");
+            item.className = "revision-item";
+            item.innerHTML = `
+              <div class="revision-info">
+                <strong>${rev.title || "Untitled Revision"}</strong>
+                <span>Saved ${dateStr} by ${rev.editedBy || "Editor"}</span>
+              </div>
+              <button type="button" class="cyber-btn outline" style="padding:4px 8px; font-size:0.7rem;">Restore</button>
+            `;
+            item.querySelector("button").addEventListener("click", () => {
+              if (confirm("Restore this revision into the editor? Unsaved current edits will be replaced.")) {
+                elements.title.value = rev.title || "";
+                elements.summary.value = rev.summary || "";
+                if (rev.content) quill.clipboard.dangerouslyPasteHTML(rev.content);
+                syncRenderPreview();
+                showNotification("Revision loaded into workspace. Click Update to publish.", "info");
+              }
+            });
+            elements.revisionList.appendChild(item);
+          });
+        } catch (err) {
+          console.error("Error fetching revisions:", err);
+        }
+      }
+
+      function saveDraftToLocalStorage() {
+        if (editingPostId) return;
+        const draftData = {
+          title: elements.title.value,
+          postType: elements.postType.value,
+          status: elements.status.value,
+          scheduledAt: elements.scheduledAt.value,
+          videoUrl: elements.videoUrl.value,
+          contentHtml: quill.root.innerHTML,
+          summary: elements.summary.value,
+          tags: elements.tags.value,
+          minutesRead: elements.minutesRead.value,
+          author: elements.author.value,
+          category: elements.category.value,
+          imageUrl: elements.imageUrl.value,
+          focusKeyword: elements.focusKeyword.value,
+          metaTitle: elements.metaTitle.value,
+          metaDescription: elements.metaDescription.value,
+          isFeatured: elements.isFeatured.checked,
+          savedAt: new Date().toLocaleTimeString()
+        };
+
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(draftData));
+        elements.draftStatus.textContent = `Draft saved at ${draftData.savedAt}`;
+      }
+
+      function restoreDraft() {
+        const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!rawData) return;
+
+        const data = JSON.parse(rawData);
+        elements.title.value = data.title || "";
+        elements.postType.value = data.postType || "standard";
+        elements.status.value = data.status || "published";
+        elements.scheduledAt.value = data.scheduledAt || "";
+        elements.videoUrl.value = data.videoUrl || "";
+        elements.summary.value = data.summary || "";
+        elements.tags.value = data.tags || "";
+        elements.minutesRead.value = data.minutesRead || "";
+        elements.author.value = data.author || "";
+        elements.category.value = data.category || "";
+        elements.imageUrl.value = data.imageUrl || "";
+        elements.focusKeyword.value = data.focusKeyword || "";
+        elements.metaTitle.value = data.metaTitle || "";
+        elements.metaDescription.value = data.metaDescription || "";
+        elements.isFeatured.checked = !!data.isFeatured;
+
+        if (data.contentHtml) quill.clipboard.dangerouslyPasteHTML(data.contentHtml);
+
+        if (data.postType === "video") {
+          elements.videoUrlGroup.style.display = "block";
+          elements.videoUrl.setAttribute("required", "required");
+        }
+        if (data.status === "scheduled") {
+          elements.scheduleDateGroup.style.display = "block";
+        }
+
+        elements.draftAlert.style.display = "none";
+        syncRenderPreview();
+        showNotification("Local draft restored!", "info");
+      }
+
+      function clearDraft() {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        elements.draftAlert.style.display = "none";
+        elements.draftStatus.textContent = "Auto-save Enabled";
+      }
+
+      function checkForPassedDraft() {
+        const aiDraft = localStorage.getItem("admin_add_post_draft");
+        if (!aiDraft) return false;
+
+        try {
+          const draft = JSON.parse(aiDraft);
+          elements.title.value = draft.title || "";
+          elements.postType.value = draft.postType || "standard";
+          elements.status.value = draft.status || "published";
+          elements.summary.value = draft.summary || "";
+          elements.tags.value = draft.tags || "";
+          elements.minutesRead.value = draft.minutesRead || 2;
+          elements.category.value = draft.category || "";
+          elements.focusKeyword.value = draft.focusKeyword || "";
+          elements.metaTitle.value = draft.metaTitle || "";
+          elements.metaDescription.value = draft.metaDescription || "";
+          
+          if (draft.contentHtml) {
+            quill.clipboard.dangerouslyPasteHTML(draft.contentHtml);
+          }
+
+          syncRenderPreview();
+          showNotification("Imported AI Assistant draft successfully!", "info");
+          localStorage.removeItem("admin_add_post_draft");
+          return true;
+        } catch (e) {
+          console.error("Error parsing AI draft", e);
+          return false;
+        }
+      }
+
+      async function checkForEditMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('edit');
+
+        if (!postId) {
+          if (checkForPassedDraft()) return;
+          const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (rawData) elements.draftAlert.style.display = "flex";
+          return;
+        }
+
+        try {
+          const docRef = doc(db, "newsPosts", postId);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            editingPostId = postId;
+            const post = docSnap.data();
+            currentPostSnapshot = post;
+
+            elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-to-square me-2"></i>Edit Article (ID: ${postId.substring(0,6)}...)`;
+            elements.btnSubmitText.textContent = "Update Existing Post";
+            elements.draftStatus.textContent = "Edit Mode Active";
+
+            elements.title.value = post.title || "";
+            elements.postType.value = post.postType || "standard";
+            elements.status.value = post.status || "published";
+            elements.summary.value = post.summary || "";
+            elements.tags.value = Array.isArray(post.tags) ? post.tags.join(", ") : "";
+            elements.minutesRead.value = post.minutesRead || 1;
+            elements.author.value = post.authorId || "";
+            elements.category.value = post.category || "";
+            elements.imageUrl.value = post.imageUrl || "";
+            elements.isFeatured.checked = !!post.isFeatured;
+
+            if (post.status === "scheduled" && post.scheduledAt) {
+              elements.scheduleDateGroup.style.display = "block";
+              const dt = post.scheduledAt.toDate();
+              const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+              elements.scheduledAt.value = localIso;
+            }
+
+            if (post.videoUrl) {
+              elements.videoUrl.value = post.videoUrl;
+              elements.videoUrlGroup.style.display = "block";
+            }
+
+            if (post.seo) {
+              elements.focusKeyword.value = post.seo.focusKeyword || "";
+              elements.metaTitle.value = post.seo.metaTitle || "";
+              elements.metaDescription.value = post.seo.metaDescription || "";
+            }
+
+            if (post.content) quill.clipboard.dangerouslyPasteHTML(post.content);
+
+            await loadRevisions(postId);
+            syncRenderPreview();
+            showNotification("Loaded article for editing.", "info");
+          }
+        } catch (err) {
+          console.error("Error loading document for editing:", err);
+          showNotification("Could not load post data.", "error");
+        }
+      }
+
+      async function loadFormSelectors() {
+        try {
+          const [authorsSnapshot, categoriesSnapshot] = await Promise.all([
+            getDocs(collection(db, "authors")),
+            getDocs(collection(db, "categories"))
+          ]);
+
+          elements.author.innerHTML = '<option value="">Select Author Account</option>';
+          authorsSnapshot.forEach(docInst => {
+            const authorData = docInst.data();
+            authorsMap[docInst.id] = authorData.name || "Boon News Desk";
+            elements.author.innerHTML += `<option value="${docInst.id}">${authorData.name}</option>`;
+          });
+
+          elements.category.innerHTML = '<option value="">Select Category</option>';
+          categoriesSnapshot.forEach(docInst => {
+            const catName = docInst.data().name;
+            elements.category.innerHTML += `<option value="${catName}">${catName}</option>`;
+          });
+        } catch (err) {
+          console.error("Fetch error:", err);
+          showNotification("Failed to fetch dropdown options.", "error");
+        }
+      }
+
+      quill.on('text-change', () => {
+        autoCalculateReadTime();
+        syncRenderPreview();
+        saveDraftToLocalStorage();
+      });
+
+      elements.postType.addEventListener("change", () => {
+        if (elements.postType.value === "video") {
+          elements.videoUrlGroup.style.display = "block";
+          elements.videoUrl.setAttribute("required", "required");
+        } else {
+          elements.videoUrlGroup.style.display = "none";
+          elements.videoUrl.removeAttribute("required");
+          elements.videoUrl.value = "";
+        }
+        syncRenderPreview();
+        saveDraftToLocalStorage();
+      });
+
+      ["title", "summary", "category", "minutesRead", "tags", "author", "videoUrl", "scheduledAt", "focusKeyword", "metaTitle", "metaDescription"].forEach(id => {
+        elements[id].addEventListener("input", () => { syncRenderPreview(); saveDraftToLocalStorage(); });
+        elements[id].addEventListener("change", () => { syncRenderPreview(); saveDraftToLocalStorage(); });
+      });
+
+      elements.isFeatured.addEventListener("change", saveDraftToLocalStorage);
+
+      let imageCheckTimer;
+      elements.imageUrl.addEventListener("input", () => {
+        clearTimeout(imageCheckTimer);
+        const targetUrl = formatDropboxUrl(elements.imageUrl.value);
+        saveDraftToLocalStorage();
+
+        if (!targetUrl) {
+          elements.imageStatus.innerHTML = "";
+          syncRenderPreview();
+          return;
+        }
+
+        elements.imageStatus.innerHTML = `<span style="color:var(--tech-cyan)"><i class="fa-solid fa-spinner fa-spin me-1"></i>Validating image link...</span>`;
+
+        imageCheckTimer = setTimeout(() => {
+          const imageTester = new Image();
+          imageTester.onload = () => {
+            elements.imageStatus.innerHTML = `<span style="color:var(--tech-green)"><i class="fa-solid fa-circle-check me-1"></i>Image URL validated.</span>`;
+            syncRenderPreview();
+          };
+          imageTester.onerror = () => {
+            elements.imageStatus.innerHTML = `<span style="color:var(--tech-pink)"><i class="fa-solid fa-circle-xmark me-1"></i>Link error. Ensure public permissions.</span>`;
+          };
+          imageTester.src = targetUrl;
+        }, 400);
+      });
+
+      window.addEventListener("beforeunload", (e) => {
+        if (!isSubmitting && (quill.getText().trim().length > 0 || elements.title.value.trim().length > 0)) {
+          e.preventDefault();
+          e.returnValue = "";
+        }
+      });
+
+      elements.btnRestoreDraft.addEventListener("click", restoreDraft);
+      elements.btnDiscardDraft.addEventListener("click", clearDraft);
+
+      elements.btnManualSaveDraft.addEventListener("click", () => {
+        saveDraftToLocalStorage();
+        showNotification("Draft saved to browser storage!", "info");
+      });
+
+      elements.btnClearForm.addEventListener("click", () => {
+        if (confirm("Reset form and clear workspace?")) {
+          elements.form.reset();
+          quill.setText('');
+          clearDraft();
+          editingPostId = null;
+          currentPostSnapshot = null;
+          elements.revisionPanel.style.display = "none";
+          elements.scheduleDateGroup.style.display = "none";
+          elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-nib me-2"></i>Create New Post`;
+          elements.btnSubmitText.textContent = "Publish Article";
+          elements.videoUrlGroup.style.display = "none";
+          elements.imageStatus.innerHTML = "";
+          syncRenderPreview();
+          showNotification("Workspace cleared.");
+        }
+      });
+
+      elements.form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const title = elements.title.value.trim();
+        const plainTextContent = quill.getText().trim();
+        const postType = elements.postType.value;
+        const category = elements.category.value;
+        const authorId = elements.author.value;
+        const statusVal = elements.status.value;
+
+        if (!title || !plainTextContent || !postType || !category || !authorId) {
+          return showNotification("Please complete all required fields.", "error");
+        }
+
+        if (statusVal === "scheduled" && !elements.scheduledAt.value) {
+          return showNotification("Please select a future date and time for scheduled publishing.", "error");
+        }
+
+        isSubmitting = true;
+
+        const rawHtml = quill.root.innerHTML.trim();
+        const sanitizedContent = typeof DOMPurify !== 'undefined' 
+          ? DOMPurify.sanitize(rawHtml) 
+          : rawHtml;
+
+        try {
+          const nowTimestamp = Timestamp.now();
+          const postSlug = createSlug(title);
+          const authorName = authorsMap[authorId] || "Boon News Desk";
+          
+          const scheduledTimestamp = (statusVal === "scheduled" && elements.scheduledAt.value)
+            ? Timestamp.fromDate(new Date(elements.scheduledAt.value))
+            : null;
+
+          const publishIsoStr = scheduledTimestamp
+            ? scheduledTimestamp.toDate().toISOString()
+            : nowTimestamp.toDate().toISOString();
+          
+          const targetDocRef = editingPostId 
+            ? doc(db, "newsPosts", editingPostId) 
+            : doc(collection(db, "newsPosts"));
+
+          if (editingPostId && currentPostSnapshot) {
+            await addDoc(collection(db, "newsPosts", editingPostId, "revisions"), {
+              title: currentPostSnapshot.title || "",
+              summary: currentPostSnapshot.summary || "",
+              content: currentPostSnapshot.content || "",
+              savedAt: nowTimestamp,
+              editedBy: currentUserEmail
+            });
+          }
+
+          const newsArticleSchema = {
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": title,
+            "description": elements.summary.value.trim(),
+            "datePublished": publishIsoStr,
+            "dateModified": nowTimestamp.toDate().toISOString(),
+            "author": [{
+              "@type": "Person",
+              "name": authorName
+            }],
+            "publisher": {
+              "@type": "Organization",
+              "name": "Boon News",
+              "url": "https://boonnewsng.blog"
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://boonnewsng.blog/${postSlug}`
+            }
+          };
+
+          const payload = {
+            id: targetDocRef.id,
+            title,
+            slug: postSlug,
+            status: statusVal,
+            scheduledAt: scheduledTimestamp,
+            content: sanitizedContent,
+            summary: elements.summary.value.trim(),
+            postType,
+            videoUrl: postType === "video" ? elements.videoUrl.value.trim() : null,
+            tags: parseUniqueTags(elements.tags.value),
+            minutesRead: parseInt(elements.minutesRead.value) || 1,
+            category,
+            authorId,
+            authorName,
+            imageUrl: formatDropboxUrl(elements.imageUrl.value),
+            isFeatured: elements.isFeatured.checked,
+            schemaJsonLd: JSON.stringify(newsArticleSchema),
+            seo: {
+              focusKeyword: elements.focusKeyword.value.trim(),
+              metaTitle: elements.metaTitle.value.trim() || title,
+              metaDescription: elements.metaDescription.value.trim() || elements.summary.value.trim()
+            },
+            updatedAt: nowTimestamp,
+            createdAt: editingPostId ? undefined : nowTimestamp,
+            featuredAt: elements.isFeatured.checked ? nowTimestamp : null,
+            timestamp: publishIsoStr,
+            views: editingPostId ? undefined : 0
+          };
+
+          Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+
+          await setDoc(targetDocRef, payload, { merge: true });
+
+          const msg = editingPostId 
+            ? "Article updated and revision saved!" 
+            : (statusVal === "scheduled" ? "Article scheduled successfully!" : "Article published successfully!");
+          showNotification(msg);
+          
+          elements.form.reset();
+          quill.setText('');
+          clearDraft();
+          editingPostId = null;
+          currentPostSnapshot = null;
+          elements.revisionPanel.style.display = "none";
+          elements.scheduleDateGroup.style.display = "none";
+          elements.formHeaderTitle.innerHTML = `<i class="fa-solid fa-pen-nib me-2"></i>Create New Post`;
+          elements.btnSubmitText.textContent = "Publish Article";
+          elements.videoUrlGroup.style.display = "none";
+          elements.imageStatus.innerHTML = "";
+          syncRenderPreview();
+
+        } catch (err) {
+          console.error("Firestore Save Error:", err);
+          showNotification("Failed to save post to database.", "error");
+        } finally {
+          isSubmitting = false;
+        }
+      });
+
+      async function bootstrapWorkspace() {
+        await loadFormSelectors();
+        await checkForEditMode();
+        syncRenderPreview();
+      }
+
+      bootstrapWorkspace();
+    </script>
+</body>
+</html>
